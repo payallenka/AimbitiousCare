@@ -18,6 +18,12 @@ import ExpertsPage from './pages/ExpertsPage'
 import ChatListPage from './pages/ChatListPage'
 import ChatPage from './pages/ChatPage'
 import AIChatbotPage from './pages/AIChatbotPage'
+import ProfessionalAvailabilityPage from './pages/ProfessionalAvailabilityPage'
+import AppointmentInboxPage from './pages/AppointmentInboxPage'
+import BookAppointmentPage from './pages/BookAppointmentPage'
+import PatientAppointmentsPage from './pages/PatientAppointmentsPage'
+import PostsPage from './pages/PostsPage'
+import DealsPage from './pages/DealsPage'
 
 const queryClient = new QueryClient()
 
@@ -185,6 +191,54 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ChatPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/availability"
+        element={
+          <ProtectedRoute>
+            <ProfessionalAvailabilityPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/appointment-inbox"
+        element={
+          <ProtectedRoute>
+            <AppointmentInboxPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/book-appointment"
+        element={
+          <ProtectedRoute>
+            <BookAppointmentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-appointments"
+        element={
+          <ProtectedRoute>
+            <PatientAppointmentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/posts"
+        element={
+          <ProtectedRoute>
+            <PostsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/deals"
+        element={
+          <ProtectedRoute>
+            <DealsPage />
           </ProtectedRoute>
         }
       />

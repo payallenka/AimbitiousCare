@@ -1,7 +1,15 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
-import { Brain, LogOut, User, Users, MessageCircle, Home, Calendar, FileText, Gift, Sparkles } from 'lucide-react'
+import { Brain, LogOut, User, Users, MessageCircle, Home, Calendar, FileText, Gift, Sparkles, Clock, Inbox } from 'lucide-react'
+
+interface NavItem {
+  label: string
+  icon: any
+  path: string
+  highlight?: boolean
+  disabled?: boolean
+}
 
 export default function Navbar() {
   const navigate = useNavigate()
@@ -16,15 +24,36 @@ export default function Navbar() {
     }
   }
 
-  const navItems = [
-    { label: 'Dashboard', icon: Home, path: '/dashboard' },
-    { label: 'AI Chatbot', icon: Sparkles, path: '/ai-chatbot', highlight: true },
-    { label: 'Experts', icon: Users, path: '/experts' },
-    { label: 'Chat', icon: MessageCircle, path: '/chat' },
-    { label: 'Appointments', icon: Calendar, path: '/appointments', disabled: true },
-    { label: 'Posts', icon: FileText, path: '/posts', disabled: true },
-    { label: 'Deals', icon: Gift, path: '/deals', disabled: true },
-  ]
+  const { userProfile } = useAuth()
+
+  const getNavItems = (): NavItem[] => {
+    const baseItems: NavItem[] = [
+      { label: 'Dashboard', icon: Home, path: '/dashboard' },
+      { label: 'AI Chatbot', icon: Sparkles, path: '/ai-chatbot', highlight: true },
+      { label: 'Experts', icon: Users, path: '/experts' },
+      { label: 'Chat', icon: MessageCircle, path: '/chat' },
+    ]
+
+    if (userProfile?.user_role === 'patient') {
+      return [
+        ...baseItems,
+        { label: 'Book Appointment', icon: Calendar, path: '/book-appointment' },
+        { label: 'My Appointments', icon: Clock, path: '/my-appointments' },
+        { label: 'Posts', icon: FileText, path: '/posts' },
+        { label: 'Deals', icon: Gift, path: '/deals' },
+      ]
+    } else {
+      return [
+        ...baseItems,
+        { label: 'Availability', icon: Clock, path: '/availability' },
+        { label: 'Appointment Inbox', icon: Inbox, path: '/appointment-inbox' },
+        { label: 'Posts', icon: FileText, path: '/posts' },
+        { label: 'Deals', icon: Gift, path: '/deals' },
+      ]
+    }
+  }
+
+  const navItems = getNavItems()
 
   return (
     <nav className="glass-card border-b border-border/50 sticky top-0 z-50">
