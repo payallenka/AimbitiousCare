@@ -69,7 +69,7 @@ export default function ResetPasswordPage() {
         throw new Error(updateError.message)
       }
 
-      toast.success('Password updated! 🎉', {
+      toast.success('Password updated!', {
         description: 'Your password has been successfully changed. You can now log in.',
         duration: 5000,
       })
@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
           >
             <Brain className="w-8 h-8 text-primary" />
           </motion.div>
-          <h1 className="text-4xl font-heading font-bold gradient-text mb-2">
+          <h1 className="text-4xl font-heading font-bold text-black font-bold mb-2">
             Ambitious Care
           </h1>
           <p className="text-muted-foreground">

@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { MessageCircle, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
-import Navbar from '@/components/Navbar'
+import Sidebar from '@/components/Sidebar'
+import { InfoDialogButton } from '@/components/InfoDialog'
+
+const DEFAULT_AVATAR = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect width="64" height="64" fill="%23f5f5dc"/%3E%3Ccircle cx="32" cy="24" r="12" fill="%23000"/%3E%3Cpath fill="%23000" d="M16 54c0-8.8 7.2-16 16-16s16 7.2 16 16z"/%3E%3C/svg%3E'
 
 interface ConversationWithUser {
   id: string
@@ -26,13 +29,13 @@ export default function ChatListPage() {
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    if (userProfile) {
-      fetchConversations()
-      subscribeToConversations()
-    }
+    if (!userProfile) return
+
+    fetchConversations()
+    const channel = subscribeToConversations()
 
     return () => {
-      supabase.channel('conversations').unsubscribe()
+      channel?.unsubscribe()
     }
   }, [userProfile])
 
@@ -160,31 +163,47 @@ export default function ChatListPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen cosmic-bg flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
-          <p className="text-muted-foreground">Loading conversations...</p>
+      <div className="min-h-screen mesh-bg flex flex-col lg:flex-row">
+        <Sidebar />
+        <div className="flex-1 w-full flex items-center justify-center px-4 py-12 sm:px-6 lg:px-12 lg:ml-64">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border border-black/20 border-t-black mb-4"></div>
+            <p className="text-muted-foreground">Loading conversations...</p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen cosmic-bg">
-      <Navbar />
-      <div className="max-w-4xl mx-auto p-6">
+    <div className="min-h-screen mesh-bg flex flex-col lg:flex-row">
+      <Sidebar />
+      <div className="flex-1 w-full px-4 py-10 sm:px-6 lg:px-12 lg:ml-64">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-heading font-bold gradient-text mb-2">
-            Messages
-          </h1>
-          <p className="text-muted-foreground">
-            Your conversations with experts
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-heading font-bold text-black mb-2">
+              Messages
+            </h1>
+            <p className="text-muted-foreground">
+              Your conversations with experts
+            </p>
+          </div>
+          <InfoDialogButton
+            title="Messages Overview"
+            description="Manage every conversation you have with professionals."
+            points={[
+              'Search by name or keyword to quickly locate a thread.',
+              'Latest activity floats to the top automatically.',
+              'Click any conversation card to open the detailed chat view.',
+            ]}
+            triggerClassName="hidden md:inline-flex"
+          />
         </div>
 
         {/* Search */}
-        <div className="glass-card rounded-xl p-4 mb-6">
+        <div className="relative overflow-hidden rounded-3xl border border-black/10 bg-white/60 backdrop-blur-xl p-5 mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 hover:opacity-100 transition" />
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
@@ -198,9 +217,11 @@ export default function ChatListPage() {
 
         {/* Conversations List */}
         {filteredConversations.length === 0 ? (
-          <div className="glass-card rounded-xl p-12 text-center">
-            <MessageCircle className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No conversations yet</h3>
+          <div className="rounded-3xl border border-black/10 bg-white/60 backdrop-blur-xl p-16 text-center">
+            <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full border border-black/15 bg-white/80 font-semibold text-xs tracking-[0.32em] text-black">
+              EMPTY
+            </div>
+            <h3 className="text-lg font-semibold mb-2 text-black">No conversations yet</h3>
             <p className="text-muted-foreground mb-4">
               Start chatting with experts to see your conversations here
             </p>
@@ -213,30 +234,28 @@ export default function ChatListPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 onClick={() => navigate(`/chat/${conv.id}`)}
-                className="glass-card rounded-xl p-4 hover:bg-primary/5 cursor-pointer transition-colors"
+                className="relative overflow-hidden rounded-3xl border border-black/10 bg-white/60 backdrop-blur-xl p-5 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-xl"
               >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/5 opacity-0 group-hover:opacity-100 transition" />
                 <div className="flex items-center gap-4">
                   <img
-                    src={
-                      conv.other_user_picture ||
-                      'https://via.placeholder.com/50'
-                    }
+                    src={conv.other_user_picture || DEFAULT_AVATAR}
                     alt={conv.other_user_name}
-                    className="w-12 h-12 rounded-full border-2 border-primary object-cover"
+                    className="w-12 h-12 rounded-xl border border-black/15 object-cover"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold truncate">
+                      <h3 className="font-semibold truncate text-black">
                         {conv.other_user_name}
                       </h3>
                       <span className="text-xs text-muted-foreground">
                         {formatTime(conv.last_message_at)}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="text-sm text-black/70 truncate">
                       {conv.last_message}
                     </p>
-                    <p className="text-xs text-primary capitalize mt-1">
+                    <p className="text-xs uppercase tracking-[0.3em] text-black/50 mt-2">
                       {conv.other_user_role.replace('_', ' ')}
                     </p>
                   </div>

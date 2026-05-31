@@ -1,24 +1,16 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Search,
-  Filter,
-  MessageCircle,
-  Briefcase,
-  GraduationCap,
-  Globe,
-  DollarSign,
-  Clock,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react'
+import { Search, Filter, ChevronDown, ChevronUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
-import Navbar from '@/components/Navbar'
+import Sidebar from '@/components/Sidebar'
+import { InfoDialogButton } from '@/components/InfoDialog'
+
+const DEFAULT_AVATAR = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect width="64" height="64" fill="%23f5f5dc"/%3E%3Ccircle cx="32" cy="24" r="12" fill="%23000"/%3E%3Cpath fill="%23000" d="M16 54c0-8.8 7.2-16 16-16s16 7.2 16 16z"/%3E%3C/svg%3E'
 
 interface Expert {
   user_id: string // The actual user.id from users table
@@ -223,7 +215,7 @@ export default function ExpertsPage() {
     return (
       <div className="min-h-screen cosmic-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border border-black/20 border-t-black mb-4"></div>
           <p className="text-muted-foreground">Loading experts...</p>
         </div>
       </div>
@@ -231,17 +223,28 @@ export default function ExpertsPage() {
   }
 
   return (
-    <div className="min-h-screen cosmic-bg">
-      <Navbar />
-      <div className="max-w-7xl mx-auto p-6">
+    <div className="min-h-screen mesh-bg flex flex-col lg:flex-row">
+      <Sidebar />
+      <div className="flex-1 w-full px-4 py-10 sm:px-6 lg:px-12 lg:ml-64">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-heading font-bold gradient-text mb-2">
-            Find an Expert
-          </h1>
-          <p className="text-muted-foreground">
-            Connect with mental health professionals who can help you
-          </p>
+        <div className="mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-heading font-bold text-black font-bold mb-2">
+              Find an Expert
+            </h1>
+            <p className="text-muted-foreground">
+              Connect with mental health professionals who can help you
+            </p>
+          </div>
+          <InfoDialogButton
+            title="Finding the right expert"
+            description="Filter by specialization, experience, and language to discover the best match."
+            points={[
+              'Search across names, specializations, education, and languages.',
+              'Use the filter panel to narrow results by role, experience, or availability.',
+              'Start a secure conversation with “Start Conversation” once you find a fit.',
+            ]}
+          />
         </div>
 
         {/* Search and Filters */}
@@ -384,66 +387,63 @@ export default function ExpertsPage() {
                 key={expert.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-card rounded-xl p-6 hover:shadow-lg transition-shadow"
+                className="relative overflow-hidden rounded-3xl border border-black/10 bg-white/50 backdrop-blur-xl p-6 transition-all hover:-translate-y-1 hover:shadow-2xl"
               >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/5 opacity-0 group-hover:opacity-100 transition pointer-events-none" />
+
                 {/* Expert Header */}
                 <div
-                  className="flex items-start gap-4 cursor-pointer"
+                  className="relative z-10 flex items-start gap-5 cursor-pointer"
                   onClick={() =>
                     setExpandedExpert(
                       expandedExpert === expert.id ? null : expert.id
                     )
                   }
                 >
-                  <img
-                    src={
-                      expert.profile_picture_url ||
-                      'https://via.placeholder.com/100'
-                    }
-                    alt={expert.full_name}
-                    className="w-20 h-20 rounded-full object-cover border-2 border-primary"
-                  />
+                    <div className="relative h-20 w-20 rounded-2xl overflow-hidden border border-black/10 bg-white/80 backdrop-blur">
+                      <img
+                        src={expert.profile_picture_url || DEFAULT_AVATAR}
+                        alt={expert.full_name}
+                        className="h-full w-full object-cover"
+                      />
+                    <div className="absolute inset-0 rounded-2xl border border-white/30"></div>
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-heading font-semibold truncate">
-                      {expert.full_name}
-                    </h3>
-                    <p className="text-primary text-sm">
-                      {expert.professional_title}
-                    </p>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-xs uppercase tracking-[0.3em] text-black/50">
                       {ROLE_LABELS[expert.user_role]}
                     </p>
+                    <h3 className="text-xl font-heading font-semibold text-black truncate">
+                      {expert.full_name}
+                    </h3>
+                    <p className="text-sm text-black/60">
+                      {expert.professional_title}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-black/60">
+                      <span className="rounded-full bg-white/60 px-3 py-1 border border-black/10">
+                        {expert.years_of_experience} years experience
+                      </span>
+                      {expert.appointment_fee && (
+                        <span className="rounded-full bg-white/60 px-3 py-1 border border-black/10">
+                          £{expert.appointment_fee} per session
+                        </span>
+                      )}
+                      {expert.session_duration && (
+                        <span className="rounded-full bg-white/60 px-3 py-1 border border-black/10">
+                          {expert.session_duration} min session
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {expandedExpert === expert.id ? (
-                    <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                    <ChevronUp className="w-5 h-5 text-black/50" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                  )}
-                </div>
-
-                {/* Quick Info */}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full flex items-center gap-1">
-                    <Briefcase className="w-3 h-3" />
-                    {expert.years_of_experience} years
-                  </span>
-                  {expert.appointment_fee && (
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full flex items-center gap-1">
-                      <DollarSign className="w-3 h-3" />
-                      £{expert.appointment_fee}
-                    </span>
-                  )}
-                  {expert.session_duration && (
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {expert.session_duration} min
-                    </span>
+                    <ChevronDown className="w-5 h-5 text-black/50" />
                   )}
                 </div>
 
                 {/* Bio */}
                 {expert.short_bio && (
-                  <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
+                  <p className="relative z-10 mt-4 text-sm text-black/70 leading-relaxed line-clamp-3">
                     {expert.short_bio}
                   </p>
                 )}
@@ -455,64 +455,51 @@ export default function ExpertsPage() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden mt-4 space-y-4 border-t border-border pt-4"
+                      className="relative z-10 overflow-hidden mt-5 space-y-4 border-t border-black/10 pt-4"
                     >
-                      {/* Areas of Expertise */}
-                      {expert.areas_of_expertise &&
-                        expert.areas_of_expertise.length > 0 && (
-                          <div>
-                            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                              <Briefcase className="w-4 h-4" />
-                              Specializations
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {expert.areas_of_expertise.map((area, idx) => (
-                                <span
-                                  key={idx}
-                                  className="px-2 py-1 bg-muted text-xs rounded"
-                                >
-                                  {area}
-                                </span>
-                              ))}
-                            </div>
+                      {expert.areas_of_expertise && expert.areas_of_expertise.length > 0 && (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-semibold text-black">Specialisations</h4>
+                            <span className="text-xs uppercase tracking-[0.3em] text-black/40">Focus</span>
                           </div>
-                        )}
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {expert.areas_of_expertise.map((area, idx) => (
+                              <span
+                                key={idx}
+                                className="px-3 py-1 text-xs font-medium rounded-full border border-black/10 bg-white/70"
+                              >
+                                {area}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                      {/* Education */}
                       {expert.education && expert.education.length > 0 && (
                         <div>
-                          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                            <GraduationCap className="w-4 h-4" />
-                            Education
-                          </h4>
-                          <ul className="space-y-1">
+                          <h4 className="text-sm font-semibold text-black mb-2">Education</h4>
+                          <ul className="space-y-1 text-sm text-black/70">
                             {expert.education.map((edu, idx) => (
-                              <li key={idx} className="text-sm text-muted-foreground">
-                                • {edu}
-                              </li>
+                              <li key={idx}>{edu}</li>
                             ))}
                           </ul>
                         </div>
                       )}
 
-                      {/* Languages */}
                       {expert.languages && expert.languages.length > 0 && (
-                        <div>
-                          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                            <Globe className="w-4 h-4" />
-                            Languages
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
+                        <div className="flex flex-col gap-2">
+                          <h4 className="text-sm font-semibold text-black">Languages</h4>
+                          <p className="text-sm text-black/70">
                             {expert.languages.join(', ')}
                           </p>
                         </div>
                       )}
 
-                      {/* Practice Info */}
                       {expert.practice_company_name && (
                         <div>
-                          <h4 className="text-sm font-semibold mb-1">Practice</h4>
-                          <p className="text-sm text-muted-foreground">
+                          <h4 className="text-sm font-semibold text-black">Practice</h4>
+                          <p className="text-sm text-black/70">
                             {expert.practice_company_name}
                           </p>
                         </div>
@@ -522,13 +509,12 @@ export default function ExpertsPage() {
                 </AnimatePresence>
 
                 {/* Chat Button */}
-                <div className="mt-4">
+                <div className="relative z-10 mt-6 flex items-center justify-between gap-3">
                   <Button
-                    className="w-full"
+                    className="flex-1"
                     onClick={() => handleStartChat(expert.user_id)}
                   >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Start Chat
+                    Start Conversation
                   </Button>
                 </div>
               </motion.div>

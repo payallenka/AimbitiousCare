@@ -7,6 +7,7 @@ interface AuthContextType {
   user: SupabaseUser | null
   userProfile: User | null
   loading: boolean
+  isSuperAdmin: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -18,6 +19,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [userProfile, setUserProfile] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+
+  const superAdminEmails = (import.meta.env.VITE_SUPER_ADMIN_EMAIL || import.meta.env.VITE_SUPER_ADMIN_EMAILS || '')
+    .split(',')
+    .map((email: string) => email.trim().toLowerCase())
+    .filter(Boolean)
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -54,6 +61,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         fetchUserProfile(session.user.id)
       }
+      if (session?.user?.email) {
+        setIsSuperAdmin(superAdminEmails.includes(session.user.email.toLowerCase()))
+      } else {
+        setIsSuperAdmin(false)
+      }
       setLoading(false)
     })
 
@@ -64,8 +76,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchUserProfile(session.user.id)
+        if (session.user.email) {
+          setIsSuperAdmin(superAdminEmails.includes(session.user.email.toLowerCase()))
+        } else {
+          setIsSuperAdmin(false)
+        }
       } else {
         setUserProfile(null)
+        setIsSuperAdmin(false)
       }
     })
 
@@ -102,6 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(null)
       setUserProfile(null)
+      setIsSuperAdmin(false)
       
       toast.success('Signed out', {
         description: 'You have been successfully signed out.',
@@ -120,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         userProfile,
         loading,
+        isSuperAdmin,
         signIn,
         signOut,
         refreshProfile,

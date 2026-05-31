@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Sparkles, Trash2, Bot, User as UserIcon } from 'lucide-react'
+import { Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
-import Navbar from '@/components/Navbar'
+import Sidebar from '@/components/Sidebar'
 
 interface Message {
   id: string
@@ -165,10 +165,10 @@ export default function AIChatbotPage() {
   }
 
   return (
-    <div className="min-h-screen cosmic-bg flex flex-col">
-      <Navbar />
+    <div className="min-h-screen mesh-bg flex flex-col lg:flex-row">
+      <Sidebar />
 
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+      <div className="flex-1 w-full flex flex-col px-4 py-10 sm:px-6 lg:px-12 lg:ml-64">
         {/* Header */}
         <div className="p-6 pb-4">
           <motion.div
@@ -176,16 +176,32 @@ export default function AIChatbotPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary via-accent to-primary/60 mb-4 animate-pulse">
-              <Sparkles className="w-8 h-8 text-white" />
+            <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-6">
+              <div className="absolute inset-0 rounded-3xl border border-black/15 bg-white/70 backdrop-blur-lg" />
+              <div className="absolute inset-3 rounded-2xl border border-black/20 bg-[#f5f5dc]/70" />
+              <span className="relative z-10 text-xl font-bold tracking-[0.4em] text-black">AI</span>
             </div>
-            <h1 className="text-3xl font-heading font-bold gradient-text mb-2">
+            <h1 className="text-4xl font-bold text-black mb-2">
               AI Mental Health Support
             </h1>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="text-gray-800 max-w-xl mx-auto font-semibold">
               Your personal AI therapist, available 24/7. Confidential, understanding, and
               here to help construction workers navigate mental health challenges.
             </p>
+            {messages.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4"
+              >
+                <button
+                  onClick={clearConversation}
+                  className="px-6 py-3 bg-black text-white rounded-xl font-semibold border border-black transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                >
+                  Reset Conversation
+                </button>
+              </motion.div>
+            )}
           </motion.div>
         </div>
 
@@ -198,12 +214,14 @@ export default function AIChatbotPage() {
               className="space-y-6"
             >
               {/* Welcome Message */}
-              <div className="glass-card rounded-2xl p-8 text-center">
-                <Bot className="w-12 h-12 text-primary mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">
-                  Welcome, {userProfile?.full_name}! 👋
+              <div className="glass-card rounded-2xl p-8 text-center border border-black/10 bg-white/60 backdrop-blur-xl">
+                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full border border-black/15 bg-white/80 font-bold text-sm tracking-[0.3em] text-black">
+                  HELLO
+                </div>
+                <h3 className="text-xl font-semibold mb-2 text-gray-800">
+                  Welcome, {userProfile?.full_name}!
                 </h3>
-                <p className="text-muted-foreground mb-6">
+                <p className="text-gray-700 mb-6 font-medium">
                   I'm here to listen and support you. Everything you share is confidential.
                   How are you feeling today?
                 </p>
@@ -211,7 +229,7 @@ export default function AIChatbotPage() {
 
               {/* Suggested Prompts */}
               <div className="space-y-3">
-                <p className="text-sm text-muted-foreground text-center">
+                <p className="text-sm text-gray-700 text-center font-bold">
                   Try one of these to get started:
                 </p>
                 {SUGGESTED_PROMPTS.map((prompt, index) => (
@@ -222,11 +240,13 @@ export default function AIChatbotPage() {
                     transition={{ delay: index * 0.1 }}
                     onClick={() => handlePromptClick(prompt)}
                     disabled={isLoading}
-                    className="w-full glass-card rounded-xl p-4 text-left hover:bg-primary/5 transition-colors group"
+                    className="w-full glass-card rounded-xl p-4 text-left hover:scale-105 hover:shadow-xl transition-all group border border-black/10 bg-white/60 backdrop-blur"
                   >
                     <div className="flex items-center gap-3">
-                      <Sparkles className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                      <span className="text-sm">{prompt}</span>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/20 bg-white/70 text-xs font-semibold tracking-[0.3em] text-black group-hover:bg-black group-hover:text-white transition">
+                        GO
+                      </span>
+                      <span className="text-sm font-medium text-gray-800">{prompt}</span>
                     </div>
                   </motion.button>
                 ))}
@@ -234,19 +254,6 @@ export default function AIChatbotPage() {
             </motion.div>
           ) : (
             <>
-              {/* Clear Button */}
-              <div className="flex justify-end mb-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearConversation}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Clear Conversation
-                </Button>
-              </div>
-
               {/* Messages */}
               <div className="space-y-4">
                 {messages.map((message, index) => (
@@ -266,17 +273,13 @@ export default function AIChatbotPage() {
                     >
                       {/* Avatar */}
                       <div
-                        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                        className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xs font-semibold tracking-[0.3em] border ${
                           message.role === 'user'
-                            ? 'bg-primary'
-                            : 'bg-gradient-to-br from-primary via-accent to-primary/60'
+                            ? 'bg-black border-black text-white shadow-lg'
+                            : 'bg-white border-black text-black shadow-lg'
                         }`}
                       >
-                        {message.role === 'user' ? (
-                          <UserIcon className="w-5 h-5 text-primary-foreground" />
-                        ) : (
-                          <Sparkles className="w-5 h-5 text-white" />
-                        )}
+                        {message.role === 'user' ? 'YOU' : 'AI'}
                       </div>
 
                       {/* Message Bubble */}
@@ -317,8 +320,8 @@ export default function AIChatbotPage() {
                       className="flex justify-start"
                     >
                       <div className="flex gap-3 max-w-[80%]">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-primary via-accent to-primary/60">
-                          <Sparkles className="w-5 h-5 text-white" />
+                        <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-white border border-black text-xs font-semibold tracking-[0.3em] shadow-lg">
+                          AI
                         </div>
                         <div className="glass-card rounded-2xl px-4 py-3">
                           <div className="flex gap-1">
@@ -329,7 +332,7 @@ export default function AIChatbotPage() {
                                 duration: 0.8,
                                 delay: 0,
                               }}
-                              className="w-2 h-2 bg-primary rounded-full"
+                              className="w-2 h-2 bg-black rounded-full"
                             />
                             <motion.div
                               animate={{ scale: [1, 1.2, 1] }}
@@ -338,7 +341,7 @@ export default function AIChatbotPage() {
                                 duration: 0.8,
                                 delay: 0.2,
                               }}
-                              className="w-2 h-2 bg-primary rounded-full"
+                              className="w-2 h-2 bg-black rounded-full"
                             />
                             <motion.div
                               animate={{ scale: [1, 1.2, 1] }}
@@ -347,7 +350,7 @@ export default function AIChatbotPage() {
                                 duration: 0.8,
                                 delay: 0.4,
                               }}
-                              className="w-2 h-2 bg-primary rounded-full"
+                              className="w-2 h-2 bg-black rounded-full"
                             />
                           </div>
                         </div>

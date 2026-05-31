@@ -4,7 +4,8 @@ import { Gift, MapPin, Clock, Tag, Calendar, Copy, Check, Sparkles } from 'lucid
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import Navbar from '@/components/Navbar'
+import Sidebar from '@/components/Sidebar'
+import { InfoDialogButton } from '@/components/InfoDialog'
 
 interface Deal {
   id: string
@@ -44,10 +45,11 @@ function ScratchCard({ onReveal, isRevealed }: ScratchCardProps) {
     ctx.scale(2, 2)
 
     // Create gradient scratch-off layer
-    const gradient = ctx.createLinearGradient(0, 0, rect.width, rect.height)
-    gradient.addColorStop(0, '#f59e0b')
-    gradient.addColorStop(0.5, '#fbbf24')
-    gradient.addColorStop(1, '#f59e0b')
+    const gradient = ctx.createLinearGradient(0, 0, rect.width, rect.height);
+    gradient.addColorStop(0, '#111827');  // near-black (Tailwind gray-900)
+    gradient.addColorStop(0.5, '#6b7280'); // medium gray (gray-500)
+    gradient.addColorStop(1, '#f9fafb');   // off-white (gray-50)
+    
     
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, rect.width, rect.height)
@@ -69,7 +71,7 @@ function ScratchCard({ onReveal, isRevealed }: ScratchCardProps) {
     ctx.textBaseline = 'middle'
     ctx.fillText('SCRATCH TO REVEAL', rect.width / 2, rect.height / 2 - 10)
     ctx.font = '14px Inter, sans-serif'
-    ctx.fillText('👆 Tap or drag to scratch', rect.width / 2, rect.height / 2 + 15)
+    ctx.fillText('Swipe gently to uncover', rect.width / 2, rect.height / 2 + 15)
   }, [isRevealed])
 
   const scratch = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -173,7 +175,7 @@ export default function DealsPage() {
 
   const handleReveal = (dealId: string) => {
     setScratchedDeals(prev => new Set([...prev, dealId]))
-    toast.success('🎉 Coupon revealed!', {
+    toast.success('Coupon revealed!', {
       description: 'Tap copy to save your code',
     })
   }
@@ -181,20 +183,20 @@ export default function DealsPage() {
   const handleCopy = (code: string) => {
     navigator.clipboard.writeText(code)
     setCopiedCode(code)
-    toast.success('Copied to clipboard! 📋')
+    toast.success('Copied to clipboard!')
     setTimeout(() => setCopiedCode(null), 2000)
   }
 
   const getCategoryColor = (category: string | null) => {
     const colors: Record<string, string> = {
-      spa: 'from-purple-500/20 to-purple-600/20 border-purple-500/50 text-purple-400',
-      gym: 'from-red-500/20 to-red-600/20 border-red-500/50 text-red-400',
-      restaurant: 'from-orange-500/20 to-orange-600/20 border-orange-500/50 text-orange-400',
-      cafe: 'from-amber-500/20 to-amber-600/20 border-amber-500/50 text-amber-400',
-      wellness: 'from-green-500/20 to-green-600/20 border-green-500/50 text-green-400',
-      retail: 'from-blue-500/20 to-blue-600/20 border-blue-500/50 text-blue-400',
+      spa: 'from-white/70 to-white/40 border-black/10 text-black/70',
+      gym: 'from-white/55 to-white/25 border-black/15 text-black/70',
+      restaurant: 'from-black/10 to-white/40 border-black/20 text-black/70',
+      cafe: 'from-white/65 to-white/35 border-black/10 text-black/70',
+      wellness: 'from-black/8 to-white/40 border-black/15 text-black/70',
+      retail: 'from-white/70 to-white/40 border-black/15 text-black/70',
     }
-    return colors[category || ''] || 'from-gray-500/20 to-gray-600/20 border-gray-500/50 text-gray-400'
+    return colors[category || ''] || 'from-white/70 to-white/40 border-black/10 text-black/60'
   }
 
   const formatDate = (dateString: string | null) => {
@@ -211,12 +213,12 @@ export default function DealsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen cosmic-bg">
-        <Navbar />
-        <div className="min-h-[calc(100vh-64px)] flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading exclusive deals...</p>
+      <div className="min-h-screen mesh-bg flex flex-col lg:flex-row">
+        <Sidebar />
+        <div className="flex-1 w-full flex items-center justify-center px-4 py-12 sm:px-6 lg:px-12 lg:ml-64">
+          <div className="w-full max-w-lg text-center rounded-3xl border border-black/10 bg-white/60 backdrop-blur-xl px-10 py-12">
+            <div className="animate-spin rounded-full h-16 w-16 border border-black/20 border-t-black mx-auto mb-6"></div>
+            <p className="text-black/70 font-medium tracking-wide">Loading exclusive deals...</p>
           </div>
         </div>
       </div>
@@ -224,25 +226,36 @@ export default function DealsPage() {
   }
 
   return (
-    <div className="min-h-screen cosmic-bg">
-      <Navbar />
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="min-h-screen mesh-bg flex flex-col lg:flex-row">
+      <Sidebar />
+      <div className="flex-1 w-full px-4 py-12 sm:px-6 lg:px-12 lg:ml-64">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="mb-12 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
         >
-          <div className="inline-flex items-center gap-3 mb-4 glass-card px-6 py-3 rounded-full">
-            <Gift className="w-8 h-8 text-primary animate-pulse" />
-            <h1 className="text-3xl md:text-5xl font-heading font-bold bg-gradient-to-r from-primary via-purple-400 to-primary bg-clip-text text-transparent">
-              Exclusive Deals & Offers
-            </h1>
-            <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+          <div className="text-center lg:text-left">
+            <div className="inline-flex items-center gap-3 mb-4 px-6 py-3 rounded-full border border-black/10 bg-white/70">
+              <Gift className="w-8 h-8 text-black" />
+              <h1 className="text-3xl md:text-5xl font-heading font-bold text-black">
+                Exclusive Deals & Offers
+              </h1>
+              <Sparkles className="w-8 h-8 text-black" />
+            </div>
+            <p className="text-black/70 text-lg max-w-3xl">
+              Unlock curated savings on wellness, fitness, dining, and lifestyle experiences. Scratch each card to reveal tailored rewards.
+            </p>
           </div>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Unlock amazing savings on wellness, fitness, dining and more! Scratch to reveal your exclusive coupon codes.
-          </p>
+          <InfoDialogButton
+            title="Exclusive Deals"
+            description="Browse curated benefits available to your account."
+            points={[
+              'Filter by category to narrow the offers shown.',
+              'Scratch each card to reveal its unique coupon code.',
+              'Copy the code and follow the listed details before the expiry date.',
+            ]}
+          />
         </motion.div>
 
         {/* Category Filter */}
@@ -287,11 +300,11 @@ export default function DealsPage() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="glass-card rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-border/50"
+                  className="relative overflow-hidden rounded-3xl border border-black/10 bg-white/60 backdrop-blur-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300"
                 >
                   {/* Card Header with Gradient */}
-                  <div className="bg-gradient-to-br from-primary/20 via-purple-500/20 to-primary/20 p-6 pb-8 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-grid-white/5"></div>
+                  <div className="bg-gradient-to-br from-black/10 via-gray-500/10 to-black/10 p-6 pb-8 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-grid-white/10"></div>
                     <div className="relative z-10">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
@@ -299,7 +312,7 @@ export default function DealsPage() {
                             {deal.business_name}
                           </h3>
                           {deal.category && (
-                            <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold uppercase border bg-gradient-to-r ${getCategoryColor(deal.category)}`}>
+                            <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-[0.3em] bg-gradient-to-r ${getCategoryColor(deal.category)}`}>
                               {deal.category}
                             </span>
                           )}
@@ -309,7 +322,7 @@ export default function DealsPage() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ delay: index * 0.1 + 0.2, type: 'spring' }}
-                            className="bg-gradient-to-br from-primary to-purple-600 text-white rounded-2xl w-20 h-20 flex items-center justify-center flex-shrink-0 ml-4 shadow-lg"
+                            className="bg-black text-white rounded-2xl w-20 h-20 flex items-center justify-center flex-shrink-0 ml-4 shadow-lg"
                           >
                             <div className="text-center">
                               <div className="text-3xl font-bold">{deal.discount_percentage}%</div>
@@ -330,29 +343,29 @@ export default function DealsPage() {
                     <div className="space-y-3 pt-2">
                       {/* Address */}
                       <div className="flex items-start gap-3 group">
-                        <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
-                        <span className="text-sm">{deal.address}</span>
+                        <MapPin className="w-5 h-5 text-black flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                        <span className="text-sm text-black/70">{deal.address}</span>
                       </div>
 
                       {/* Timings */}
                       <div className="flex items-start gap-3 group">
-                        <Clock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
-                        <span className="text-sm">{deal.timings}</span>
+                        <Clock className="w-5 h-5 text-black flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                        <span className="text-sm text-black/70">{deal.timings}</span>
                       </div>
 
                       {/* Valid Until */}
                       {deal.valid_until && (
                         <div className="flex items-center gap-3 group">
-                          <Calendar className="w-5 h-5 text-primary flex-shrink-0 group-hover:scale-110 transition-transform" />
-                          <span className="text-sm">Valid until <span className="font-semibold">{formatDate(deal.valid_until)}</span></span>
+                          <Calendar className="w-5 h-5 text-black flex-shrink-0 group-hover:scale-110 transition-transform" />
+                          <span className="text-sm text-black/70">Valid until <span className="font-semibold text-black">{formatDate(deal.valid_until)}</span></span>
                         </div>
                       )}
 
                       {/* Discount Details */}
                       {deal.discount_details && (
-                        <div className="flex items-start gap-3 bg-primary/5 rounded-xl p-3 border border-primary/20">
-                          <Tag className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                          <span className="text-sm font-semibold text-primary">
+                        <div className="flex items-start gap-3 bg-white/70 rounded-xl p-3 border border-black/10">
+                          <Tag className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
+                          <span className="text-sm font-semibold text-black">
                             {deal.discount_details}
                           </span>
                         </div>
@@ -361,12 +374,12 @@ export default function DealsPage() {
 
                     {/* Scratch-off Coupon */}
                     <div className="pt-4">
-                      <div className="relative h-32 rounded-2xl overflow-hidden border-2 border-dashed border-primary/30">
+                      <div className="relative h-32 rounded-2xl overflow-hidden border-2 border-dashed border-black/15">
                         {/* Background - Revealed Code */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-purple-500/10 to-primary/10 flex items-center justify-between px-6">
+                        <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-gray-500/10 to-black/10 flex items-center justify-between px-6">
                           <div>
                             <div className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">Your Coupon Code</div>
-                            <div className="text-3xl md:text-4xl font-bold font-mono tracking-wider text-primary">
+                            <div className="text-3xl md:text-4xl font-bold font-mono tracking-wider text-black">
                               {deal.coupon_code}
                             </div>
                           </div>
@@ -411,18 +424,18 @@ export default function DealsPage() {
                         <motion.p
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="text-center text-xs text-primary mt-2 font-semibold"
+                          className="text-center text-xs text-black mt-2 font-semibold"
                         >
-                          ✨ Code revealed! Tap copy to save it
+                          Code revealed! Tap copy to save it
                         </motion.p>
                       )}
                     </div>
 
                     {/* Terms & Conditions */}
                     {deal.terms_conditions && (
-                      <div className="pt-4 border-t border-border/50">
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          <span className="font-semibold text-foreground">Terms:</span> {deal.terms_conditions}
+                      <div className="pt-4 border-t border-black/10">
+                        <p className="text-xs text-black/60 leading-relaxed">
+                          <span className="font-semibold text-black">Terms:</span> {deal.terms_conditions}
                         </p>
                       </div>
                     )}

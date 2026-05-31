@@ -331,7 +331,7 @@ export default function PatientRegistrationPage({ isSetup = false }: { isSetup?:
         throw new Error('Failed to save patient details. Please try again.')
       }
 
-      toast.success('Profile completed! 🎉', {
+      toast.success('Profile completed!', {
         description: 'Welcome to Ambitious Care!',
         duration: 3000,
       })
@@ -371,7 +371,7 @@ export default function PatientRegistrationPage({ isSetup = false }: { isSetup?:
               <Brain className="w-8 h-8 text-primary" />
             </motion.div>
           </Link>
-          <h1 className="text-4xl font-heading font-bold gradient-text mb-2">
+          <h1 className="text-4xl font-heading font-bold text-black font-bold mb-2">
             Ambitious Care
           </h1>
           <p className="text-muted-foreground mb-4">

@@ -1,11 +1,8 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { Button } from '@/components/ui/button'
-import { Brain, LogOut, User, Users, MessageCircle, Home, Calendar, FileText, Gift, Sparkles, Clock, Inbox } from 'lucide-react'
 
 interface NavItem {
   label: string
-  icon: any
   path: string
   highlight?: boolean
   disabled?: boolean
@@ -28,27 +25,44 @@ export default function Navbar() {
 
   const getNavItems = (): NavItem[] => {
     const baseItems: NavItem[] = [
-      { label: 'Dashboard', icon: Home, path: '/dashboard' },
-      { label: 'AI Chatbot', icon: Sparkles, path: '/ai-chatbot', highlight: true },
-      { label: 'Experts', icon: Users, path: '/experts' },
-      { label: 'Chat', icon: MessageCircle, path: '/chat' },
+      { label: 'Dashboard', path: '/dashboard' },
+      { label: 'AI Chatbot', path: '/ai-chatbot', highlight: true },
+      { label: 'Experts', path: '/experts' },
+      { label: 'Chat', path: '/chat' },
     ]
 
     if (userProfile?.user_role === 'patient') {
       return [
         ...baseItems,
-        { label: 'Book Appointment', icon: Calendar, path: '/book-appointment' },
-        { label: 'My Appointments', icon: Clock, path: '/my-appointments' },
-        { label: 'Posts', icon: FileText, path: '/posts' },
-        { label: 'Deals', icon: Gift, path: '/deals' },
+        { label: 'Book Appointment', path: '/book-appointment' },
+        { label: 'My Appointments', path: '/my-appointments' },
+        { label: 'Rapid Alert', path: '/rapid-alert', highlight: true },
+        { label: 'Posts', path: '/posts' },
+        { label: 'Deals', path: '/deals' },
+      ]
+    } else if (userProfile?.user_role === 'company') {
+      return [
+        { label: 'Home', path: '/company/dashboard' },
+        { label: 'Analytics', path: '/analytics', highlight: true },
+      ]
+    } else if (userProfile?.user_role === 'therapist') {
+      return [
+        ...baseItems,
+        { label: 'Availability', path: '/availability' },
+        { label: 'Appointment Inbox', path: '/appointment-inbox' },
+        { label: 'Rapid Alert Inbox', path: '/rapid-alert-inbox', highlight: true },
+        { label: 'Posts', path: '/posts' },
+        { label: 'Deals', path: '/deals' },
+        { label: 'Analytics', path: '/analytics', highlight: true },
       ]
     } else {
       return [
         ...baseItems,
-        { label: 'Availability', icon: Clock, path: '/availability' },
-        { label: 'Appointment Inbox', icon: Inbox, path: '/appointment-inbox' },
-        { label: 'Posts', icon: FileText, path: '/posts' },
-        { label: 'Deals', icon: Gift, path: '/deals' },
+        { label: 'Availability', path: '/availability' },
+        { label: 'Appointment Inbox', path: '/appointment-inbox' },
+        { label: 'Posts', path: '/posts' },
+        { label: 'Deals', path: '/deals' },
+        { label: 'Analytics', path: '/analytics', highlight: true },
       ]
     }
   }
@@ -56,60 +70,67 @@ export default function Navbar() {
   const navItems = getNavItems()
 
   return (
-    <nav className="glass-card border-b border-border/50 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="navbar">
+      <div className="section-container">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Brain className="w-5 h-5 text-primary" />
-            </div>
-            <span className="text-xl font-heading font-bold gradient-text">
+          {/* Brand */}
+          <div 
+            className="cursor-pointer group flex items-center gap-3" 
+            onClick={() => navigate('/dashboard')}
+          >
+            <span className="text-2xl font-bold gradient-text smooth-transition">
               Ambitious Care
             </span>
           </div>
 
           {/* Nav Items */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1">
             {navItems.map((item) => {
-              const Icon = item.icon
               const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
+              const isRapidAlert = item.label === 'Rapid Alert' || item.label === 'Rapid Alert Inbox'
               return (
-                <Button
+                <button
                   key={item.path}
-                  variant="ghost"
-                  size="sm"
                   onClick={() => !item.disabled && navigate(item.path)}
                   disabled={item.disabled}
-                  className={`${
-                    isActive 
-                      ? 'bg-primary/10 text-primary' 
-                      : item.highlight 
-                      ? 'bg-gradient-to-r from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20' 
-                      : ''
-                  }`}
+                  className={`
+                    px-4 py-2 rounded-lg font-semibold text-sm smooth-transition
+                    ${
+                      isActive 
+                        ? isRapidAlert
+                          ? 'bg-red-600 text-white shadow-sm hover:bg-red-700'
+                          : 'bg-primary text-primary-foreground shadow-sm'
+                        : isRapidAlert
+                        ? 'bg-red-600 text-white hover:bg-red-700 shadow-md'
+                        : item.highlight 
+                        ? 'bg-accent/10 text-accent hover:bg-accent/20' 
+                        : 'text-foreground hover:bg-secondary'
+                    }
+                  `}
                 >
-                  <Icon className={`w-4 h-4 mr-2 ${item.highlight ? 'animate-pulse' : ''}`} />
                   {item.label}
-                </Button>
+                </button>
               )
             })}
           </div>
 
           {/* User Menu */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/profile')}>
-              <User className="w-4 h-4 mr-2" />
-              Profile
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
+            <button
+              onClick={() => navigate('/profile')}
+              className="px-4 py-2 rounded-lg font-semibold text-sm text-foreground hover:bg-secondary smooth-transition"
+            >
+              {userProfile?.full_name || 'Profile'}
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="px-4 py-2 rounded-lg font-semibold text-sm border border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 smooth-transition"
+            >
               Sign Out
-            </Button>
+            </button>
           </div>
         </div>
       </div>
     </nav>
   )
 }
-

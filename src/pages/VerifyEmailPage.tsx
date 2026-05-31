@@ -22,7 +22,7 @@ export default function VerifyEmailPage() {
           >
             <Brain className="w-8 h-8 text-primary" />
           </motion.div>
-          <h1 className="text-4xl font-heading font-bold gradient-text mb-2">
+          <h1 className="text-4xl font-heading font-bold text-black font-bold mb-2">
             Ambitious Care
           </h1>
           <p className="text-muted-foreground">

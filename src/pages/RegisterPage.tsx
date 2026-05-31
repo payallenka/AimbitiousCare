@@ -1,21 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import {
-  Brain,
-  Heart,
-  Users,
-  DollarSign,
-  MessageCircle,
-  Activity,
-} from 'lucide-react'
 
 interface RoleCard {
   id: string
   title: string
   description: string
-  icon: React.ReactNode
   services: string[]
   route: string
+  gradient: string
 }
 
 export default function RegisterPage({ isSetup = false }: { isSetup?: boolean }) {
@@ -24,88 +16,102 @@ export default function RegisterPage({ isSetup = false }: { isSetup?: boolean })
   const roles: RoleCard[] = [
     {
       id: 'patient',
-      title: 'Patient',
-      description: 'Create an account to access mental health resources and expert help.',
-      icon: <Brain className="w-8 h-8" />,
+      title: 'Users',
+      description: 'Access mental health resources and expert help',
       services: [
-        'Access to mental health professionals',
+        'Licensed mental health professionals',
         'Personalized wellness resources',
         'Confidential therapy sessions',
         'Progress tracking tools',
-        'Community support forums',
+        'Community support',
       ],
       route: isSetup ? '/setup/patient' : '/register/patient',
+      gradient: 'from-black via-gray-800 to-black',
     },
   {
     id: 'therapist',
     title: 'Therapist',
-    description: 'Create an account as a therapist to provide mental health support.',
-    icon: <Heart className="w-8 h-8" />,
+    description: 'Provide mental health support to those who need it',
     services: [
-      'Help clients with anxiety & depression',
-      'Provide trauma & PTSD support',
-      'Offer cognitive behavioral therapy',
-      'Assist with stress management',
-      'Guide through life transitions',
+      'Help with anxiety & depression',
+      'Trauma & PTSD support',
+      'Cognitive behavioral therapy',
+      'Stress management',
+      'Life transition guidance',
     ],
     route: isSetup ? '/setup/professional/therapist' : '/register/professional/therapist',
+    gradient: 'from-pink-500 via-rose-600 to-pink-700',
   },
   {
     id: 'relationship_expert',
     title: 'Relationship Expert',
-    description: 'Create an account to help with relationship issues and family dynamics.',
-    icon: <Users className="w-8 h-8" />,
+    description: 'Help with relationship issues and family dynamics',
     services: [
-      'Conflict resolution with partners',
-      'Strengthening bonds with children/family',
-      'Healthy communication strategies',
-      'Managing emotional stress from home life',
-      'Navigating separation or infidelity',
+      'Conflict resolution',
+      'Family bond strengthening',
+      'Communication strategies',
+      'Emotional stress management',
+      'Separation support',
     ],
     route: isSetup ? '/setup/professional/relationship_expert' : '/register/professional/relationship_expert',
+    gradient: 'from-orange-500 via-amber-600 to-orange-700',
   },
   {
     id: 'financial_expert',
     title: 'Financial Expert',
-    description: 'Create an account to provide financial guidance and planning support.',
-    icon: <DollarSign className="w-8 h-8" />,
+    description: 'Provide financial guidance and planning support',
     services: [
-      'Budget planning & financial literacy',
-      'Debt management strategies',
-      'Saving plans for long/short-term goals',
+      'Budget planning & literacy',
+      'Debt management',
+      'Saving strategies',
       'Credit score improvement',
-      'Retirement & pension planning',
+      'Retirement planning',
     ],
     route: isSetup ? '/setup/professional/financial_expert' : '/register/professional/financial_expert',
+    gradient: 'from-green-500 via-emerald-600 to-green-700',
   },
   {
     id: 'dating_coach',
     title: 'Dating Coach',
-    description: 'Create an account to help with dating, confidence building and healthy relationships.',
-    icon: <MessageCircle className="w-8 h-8" />,
+    description: 'Help with dating, confidence and healthy relationships',
     services: [
-      'Confidence building & self-worth',
+      'Confidence building',
       'Online dating guidance',
-      'Healthy dating habits & red flags',
-      'Post-divorce/separation support',
-      'Effective communication in dating',
+      'Healthy dating habits',
+      'Post-divorce support',
+      'Effective communication',
     ],
     route: isSetup ? '/setup/professional/dating_coach' : '/register/professional/dating_coach',
+    gradient: 'from-cyan-500 via-blue-600 to-cyan-700',
   },
   {
     id: 'health_wellness_coach',
     title: 'Health & Wellness Coach',
-    description: 'Create an account to provide fitness, nutrition, and wellness guidance.',
-    icon: <Activity className="w-8 h-8" />,
+    description: 'Provide fitness, nutrition, and wellness guidance',
     services: [
       'Customized fitness plans',
-      'Nutritional guidance for energy',
-      'Stress management techniques',
-      'Sleep hygiene and recovery',
-      'Substance use reduction support',
+      'Nutritional guidance',
+      'Stress management',
+      'Sleep hygiene',
+      'Substance use support',
     ],
     route: isSetup ? '/setup/professional/health_wellness_coach' : '/register/professional/health_wellness_coach',
-    },
+    gradient: 'from-lime-500 via-green-600 to-lime-700',
+  },
+  {
+    id: 'company',
+    title: 'Company',
+    description: 'Provide wellness benefits for your employees',
+    services: [
+      'Invite 100+ employees',
+      'Premium wellness plans',
+      'Team mental health support',
+      'Bulk invitation management',
+      'Employee wellness tracking',
+    ],
+    route: isSetup ? '/setup/company' : '/register/company',
+    gradient: 'from-gray-800 via-black to-gray-800',
+  },
   ]
 
   const container = {
@@ -113,47 +119,65 @@ export default function RegisterPage({ isSetup = false }: { isSetup?: boolean })
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.06,
       },
     },
   }
 
   const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 },
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
+    show: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }
+    },
   }
 
   return (
-    <div className="min-h-screen cosmic-bg py-12 px-4 overflow-y-auto">
+    <div className="min-h-screen mesh-gradient animated-bg py-16 px-4 overflow-y-auto">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16"
         >
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-full glass-card mb-4"
+          <motion.h1
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-7xl font-bold text-black font-bold mb-6"
           >
-            <Brain className="w-8 h-8 text-primary" />
-          </motion.div>
-          <h1 className="text-4xl font-heading font-bold gradient-text mb-2">
             Ambitious Care
-          </h1>
-          <p className="text-muted-foreground mb-8">
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-2xl text-gray-700 font-medium mb-4"
+          >
             Mental health for construction workers
-          </p>
+          </motion.p>
 
-          <h2 className="text-3xl font-heading font-semibold text-foreground mb-3">
-            Create an account
-          </h2>
-          <p className="text-muted-foreground">
-            Choose your account type to get started
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-8"
+          >
+            <h2 className="text-4xl font-bold text-gray-900 mb-3">
+              Choose Your Account Type
+            </h2>
+            <p className="text-xl text-gray-600 font-medium">
+              Select the option that best describes you
+            </p>
+          </motion.div>
         </motion.div>
 
         {/* Role Cards Grid */}
@@ -161,64 +185,79 @@ export default function RegisterPage({ isSetup = false }: { isSetup?: boolean })
           variants={container}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
         >
           {roles.map((role) => (
             <motion.div
               key={role.id}
               variants={item}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ 
+                scale: 1.03, 
+                y: -8,
+                transition: { type: "spring", stiffness: 300, damping: 20 }
+              }}
               whileTap={{ scale: 0.98 }}
-              className="glass-card rounded-2xl p-6 cursor-pointer hover:bg-card/60 transition-all group"
+              className="cursor-pointer group"
               onClick={() => navigate(role.route)}
             >
-              <div className="flex flex-col h-full">
-                {/* Icon */}
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary mb-4 group-hover:bg-primary/20 transition-colors">
-                  {role.icon}
+              <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${role.gradient} p-8 h-full min-h-[420px] flex flex-col shadow-2xl`}>
+                {/* Glassmorphic overlay on hover */}
+                <div className="absolute inset-0 bg-white/10 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                {/* Content */}
+                <div className="relative z-10 flex flex-col h-full">
+                  <div className="mb-6">
+                    <h3 className="text-4xl font-bold text-white mb-3 drop-shadow-lg">
+                      {role.title}
+                    </h3>
+                    <p className="text-white/95 text-lg font-medium">
+                      {role.description}
+                    </p>
+                  </div>
+
+                  {/* Services */}
+                  <div className="flex-1 mb-6">
+                    <p className="text-sm font-bold text-white/90 mb-3 uppercase tracking-wider">
+                      {role.id === 'patient' ? 'What You Get:' : 'Services:'}
+                    </p>
+                    <ul className="space-y-2">
+                      {role.services.map((service, idx) => (
+                        <li key={idx} className="text-white/90 text-sm font-medium flex items-start gap-2">
+                          <span className="text-white text-lg mt-0.5">→</span>
+                          <span>{service}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* CTA */}
+                  <div className="relative z-10">
+                    <div className="bg-white/20 backdrop-blur-lg rounded-2xl px-6 py-4 text-center border-2 border-white/30 group-hover:bg-white/30 transition-all">
+                      <span className="text-white font-bold text-lg">
+                        Register as {role.title}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Title */}
-                <h3 className="text-xl font-heading font-semibold mb-2 group-hover:text-primary transition-colors">
-                  {role.title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-sm text-muted-foreground mb-4">
-                  {role.description}
-                </p>
-
-                {/* Services */}
-                {role.id === 'patient' ? (
-                  <div className="mt-auto">
-                    <p className="text-sm font-medium mb-2">As a patient, you can:</p>
-                    <ul className="space-y-1">
-                      {role.services.map((service, idx) => (
-                        <li key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
-                          <span className="text-primary mt-1">•</span>
-                          <span>{service}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : (
-                  <div className="mt-auto">
-                    <p className="text-sm font-medium mb-2">Services provided:</p>
-                    <ul className="space-y-1">
-                      {role.services.map((service, idx) => (
-                        <li key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
-                          <span className="text-primary mt-1">•</span>
-                          <span>{service}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Register Button */}
-                <button className="mt-4 w-full py-2 px-4 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors text-sm font-medium">
-                  Register as {role.title}
-                </button>
+                {/* Decorative element */}
+                <motion.div
+                  className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-2xl"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.5, 0.3],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+                
+                {/* Shine effect on hover */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className="absolute inset-0 shimmer" />
+                </div>
               </div>
             </motion.div>
           ))}
@@ -228,16 +267,16 @@ export default function RegisterPage({ isSetup = false }: { isSetup?: boolean })
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="text-center"
+          transition={{ duration: 0.5, delay: 0.8 }}
+          className="text-center glass-card p-8 rounded-3xl shadow-xl max-w-2xl mx-auto"
         >
-          <p className="text-sm text-muted-foreground">
+          <p className="text-gray-700 text-xl font-medium">
             Already have an account?{' '}
             <Link
               to="/login"
-              className="text-primary hover:text-accent transition-colors font-medium"
+              className="text-black hover:text-gray-700 transition-colors font-bold hover:underline"
             >
-              Log in
+              Sign in now
             </Link>
           </p>
         </motion.div>
@@ -245,4 +284,3 @@ export default function RegisterPage({ isSetup = false }: { isSetup?: boolean })
     </div>
   )
 }
-

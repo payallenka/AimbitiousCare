@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import Navbar from '@/components/Navbar'
+import Sidebar from '@/components/Sidebar'
+import { InfoDialogButton } from '@/components/InfoDialog'
 
 interface Expert {
   id: string
@@ -215,12 +216,12 @@ export default function BookAppointmentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen cosmic-bg">
-        <Navbar />
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-          <div className="glass-card rounded-2xl p-8 text-center">
-            <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading experts...</p>
+      <div className="min-h-screen mesh-bg flex flex-col lg:flex-row">
+        <Sidebar />
+        <div className="flex-1 w-full flex items-center justify-center px-4 py-12 sm:px-6 lg:px-12 lg:ml-64">
+          <div className="w-full max-w-lg rounded-3xl border border-black/10 bg-white/60 backdrop-blur-xl px-10 py-12 text-center">
+            <div className="w-12 h-12 border border-black/20 border-t-black rounded-full animate-spin mx-auto mb-6" />
+            <p className="text-black/70 font-medium tracking-wide">Loading experts...</p>
           </div>
         </div>
       </div>
@@ -228,22 +229,34 @@ export default function BookAppointmentPage() {
   }
 
   return (
-    <div className="min-h-screen cosmic-bg">
-      <Navbar />
-      
-      <div className="max-w-5xl mx-auto p-6">
+    <div className="min-h-screen mesh-bg flex flex-col lg:flex-row">
+      <Sidebar />
+
+      <div className="flex-1 w-full px-4 py-12 sm:px-6 lg:px-12 lg:ml-64">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
         >
-          <h1 className="text-4xl font-heading font-bold gradient-text mb-3">
-            📅 Book Your Appointment
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Choose an expert and schedule your mental health session
-          </p>
+          <div>
+            <p className="text-xs uppercase tracking-[0.4em] text-black/40 mb-3">Appointments</p>
+            <h1 className="text-4xl font-heading font-bold text-black mb-2">
+              Book Your Appointment
+            </h1>
+            <p className="text-black/60 text-lg">
+              Choose an expert and schedule your mental health session
+            </p>
+          </div>
+          <InfoDialogButton
+            title="Booking Flow"
+            description="Follow the guided steps to request time with a professional."
+            points={[
+              'Select an expert to review their profile and availability.',
+              'Pick a date and time that matches their published schedule.',
+              'Share optional notes or goals so the expert can prepare before the call.',
+            ]}
+          />
         </motion.div>
 
         {/* Progress Indicator */}

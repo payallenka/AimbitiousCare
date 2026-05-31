@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import LoadingScreen from './components/LoadingScreen'
 
 // Pages
 import LoginPage from './pages/LoginPage'
@@ -24,25 +25,44 @@ import BookAppointmentPage from './pages/BookAppointmentPage'
 import PatientAppointmentsPage from './pages/PatientAppointmentsPage'
 import PostsPage from './pages/PostsPage'
 import DealsPage from './pages/DealsPage'
+import RapidAlertPage from './pages/RapidAlertPage'
+import RapidAlertInboxPage from './pages/RapidAlertInboxPage'
+import CompanyRegistrationPage from './pages/CompanyRegistrationPage'
+import CompanySubscriptionPage from './pages/CompanySubscriptionPage'
+import CompanyDashboardPage from './pages/CompanyDashboardPage'
+import CompanyEmployeesPage from './pages/CompanyEmployeesPage'
+import AnalyticsPage from './pages/AnalyticsPage'
+import InteractiveAvatarPage from './pages/InteractiveAvatarPage'
+import SuperAdminDashboardPage from './pages/SuperAdminDashboardPage'
 
 const queryClient = new QueryClient()
 
-function ProtectedRoute({ children, requiresProfile = true }: { children: React.ReactNode; requiresProfile?: boolean }) {
-  const { user, userProfile, loading } = useAuth()
+function ProtectedRoute({
+  children,
+  requiresProfile = true,
+  allowedRoles,
+  allowSuperAdmin = false,
+}: {
+  children: React.ReactNode
+  requiresProfile?: boolean
+  allowedRoles?: string[]
+  allowSuperAdmin?: boolean
+}) {
+  const { user, userProfile, loading, isSuperAdmin } = useAuth()
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center cosmic-bg">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (!user) {
     return <Navigate to="/login" replace />
+  }
+
+  if (isSuperAdmin) {
+    if (!allowSuperAdmin) {
+      return <Navigate to="/admin" replace />
+    }
+    requiresProfile = false
   }
 
   // If the route requires a profile and user doesn't have one, redirect to setup
@@ -50,8 +70,12 @@ function ProtectedRoute({ children, requiresProfile = true }: { children: React.
     return <Navigate to="/setup-profile" replace />
   }
 
+  if (!isSuperAdmin && allowedRoles && userProfile && !allowedRoles.includes(userProfile.user_role)) {
+    return <Navigate to="/dashboard" replace />
+  }
+
   // If on setup route but already has profile, redirect to dashboard
-  if (!requiresProfile && userProfile) {
+  if (!isSuperAdmin && !requiresProfile && userProfile) {
     return <Navigate to="/dashboard" replace />
   }
 
@@ -59,17 +83,14 @@ function ProtectedRoute({ children, requiresProfile = true }: { children: React.
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, userProfile, loading } = useAuth()
+  const { user, userProfile, loading, isSuperAdmin } = useAuth()
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center cosmic-bg">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen />
+  }
+
+  if (user && isSuperAdmin) {
+    return <Navigate to="/admin" replace />
   }
 
   if (user && userProfile) {
@@ -219,6 +240,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/interactive-avatar"
+        element={
+          <ProtectedRoute allowedRoles={['patient']}>
+            <InteractiveAvatarPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/my-appointments"
         element={
           <ProtectedRoute>
@@ -242,6 +271,70 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/rapid-alert"
+        element={
+          <ProtectedRoute>
+            <RapidAlertPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/rapid-alert-inbox"
+        element={
+          <ProtectedRoute>
+            <RapidAlertInboxPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/analytics"
+        element={
+          <ProtectedRoute>
+            <AnalyticsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/setup/company"
+        element={
+          <ProtectedRoute requiresProfile={false}>
+            <CompanyRegistrationPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/company/select-plan"
+        element={
+          <ProtectedRoute>
+            <CompanySubscriptionPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/company/dashboard"
+        element={
+          <ProtectedRoute>
+            <CompanyDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/company/employees"
+        element={
+          <ProtectedRoute>
+            <CompanyEmployeesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute requiresProfile={false} allowSuperAdmin>
+            <SuperAdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
   )
@@ -256,13 +349,20 @@ function App() {
           <Toaster 
             position="top-right" 
             richColors 
-            theme="dark"
+            theme="light"
+            closeButton
+            duration={3000}
             toastOptions={{
               style: {
-                background: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                color: 'hsl(var(--foreground))',
+                background: 'rgba(255, 248, 240, 0.92)',
+                backdropFilter: 'blur(18px)',
+                border: '1px solid rgba(0, 0, 0, 0.14)',
+                color: '#111111',
+                fontWeight: 600,
+                boxShadow: '0 12px 38px rgba(0, 0, 0, 0.12)',
+                borderRadius: '16px',
               },
+              className: 'glass-card',
             }}
           />
         </AuthProvider>

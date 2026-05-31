@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, MessageCircle, Image as ImageIcon, X, Edit2, Trash2, Plus, Search } from 'lucide-react'
 import { toast } from 'sonner'
-import Navbar from '@/components/Navbar'
+import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
@@ -54,6 +54,7 @@ export default function PostsPage() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null)
 
   const isProfessional = userProfile?.user_role !== 'patient'
 
@@ -384,14 +385,14 @@ export default function PostsPage() {
   }
 
   return (
-    <div className="min-h-screen cosmic-bg">
-      <Navbar />
+    <div className="min-h-screen mesh-bg flex flex-col lg:flex-row">
+      <Sidebar />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="flex-1 w-full px-4 py-10 sm:px-6 lg:px-12 lg:ml-64">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-heading font-bold gradient-text mb-2">
+            <h1 className="text-4xl font-heading font-bold text-black font-bold mb-2">
               Community Posts
             </h1>
             <p className="text-muted-foreground">
@@ -647,12 +648,20 @@ export default function PostsPage() {
 
                   {/* Post Image */}
                   {post.image_url && getImageUrl(post.image_url) && (
-                    <div className="mb-4 rounded-lg overflow-hidden">
+                    <div 
+                      className="mb-4 rounded-lg overflow-hidden cursor-pointer group relative"
+                      onClick={() => setLightboxImage(getImageUrl(post.image_url) || null)}
+                    >
                       <img
                         src={getImageUrl(post.image_url)}
                         alt="Post"
-                        className="w-full max-h-96 object-cover"
+                        className="w-full object-contain max-h-[500px] bg-gray-100 transition-transform group-hover:scale-105"
                       />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                        <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg font-bold bg-black/50 px-4 py-2 rounded-lg">
+                          Click to expand
+                        </span>
+                      </div>
                     </div>
                   )}
 
@@ -692,6 +701,40 @@ export default function PostsPage() {
           </div>
         )}
       </div>
+
+      {/* Image Lightbox */}
+      <AnimatePresence>
+        {lightboxImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setLightboxImage(null)}
+            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-zoom-out"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setLightboxImage(null)}
+                className="absolute top-4 right-4 z-10 w-12 h-12 rounded-full bg-white/10 backdrop-blur-lg hover:bg-white/20 transition-colors flex items-center justify-center group"
+              >
+                <X className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+              </button>
+              <img
+                src={lightboxImage}
+                alt="Full size"
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

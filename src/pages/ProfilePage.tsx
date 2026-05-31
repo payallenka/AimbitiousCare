@@ -1,25 +1,22 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  Brain,
-  LogOut,
-  Edit,
-  Save,
-  X,
   Camera,
   User,
   Briefcase,
   Award,
   Heart,
+  Phone,
+  Mail,
+  Globe,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { supabase, PatientProfile, ProfessionalProfile } from '@/lib/supabase'
 import { toast } from 'sonner'
+import Sidebar from '@/components/Sidebar'
 
 const COMMON_LANGUAGES = [
   'English',
@@ -37,8 +34,7 @@ const COMMON_LANGUAGES = [
 ]
 
 export default function ProfilePage() {
-  const navigate = useNavigate()
-  const { user, userProfile, signOut, refreshProfile } = useAuth()
+  const { user, userProfile, refreshProfile } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [loadingProfile, setLoadingProfile] = useState(true)
@@ -136,9 +132,7 @@ export default function ProfilePage() {
       }
     } catch (error: any) {
       console.error('Error loading profile:', error)
-      toast.error('Failed to load profile', {
-        description: error.message || 'Please try refreshing the page.',
-      })
+      toast.error('Failed to load profile')
     } finally {
       setLoadingProfile(false)
     }
@@ -161,19 +155,13 @@ export default function ProfilePage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Check file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('File too large', {
-          description: 'Please select an image under 10MB',
-        })
+        toast.error('File too large (max 10MB)')
         return
       }
 
-      // Check file type (only images)
       if (!file.type.startsWith('image/')) {
-        toast.error('Invalid file type', {
-          description: 'Please select an image file (JPG, PNG, GIF, etc.)',
-        })
+        toast.error('Please select an image file')
         return
       }
 
@@ -190,7 +178,6 @@ export default function ProfilePage() {
     try {
       let profilePictureUrl = userProfile.profile_picture_url
 
-      // Upload new profile picture if provided
       if (newProfilePicture) {
         const fileExt = newProfilePicture.name.split('.').pop()
         const fileName = `${user.id}/profile.${fileExt}`
@@ -204,9 +191,7 @@ export default function ProfilePage() {
 
         if (uploadError) {
           console.error('Error uploading profile picture:', uploadError)
-          toast.error('Failed to upload profile picture', {
-            description: uploadError.message,
-          })
+          toast.error('Failed to upload profile picture')
         } else {
           const { data: urlData } = supabase.storage
             .from('profile-pictures')
@@ -215,7 +200,6 @@ export default function ProfilePage() {
         }
       }
 
-      // Update users table
       const { error: userError } = await supabase
         .from('users')
         .update({
@@ -228,7 +212,6 @@ export default function ProfilePage() {
 
       if (userError) throw userError
 
-      // Update role-specific table
       if (userProfile.user_role === 'patient') {
         const { error: patientError } = await supabase
           .from('patient_profiles')
@@ -263,12 +246,10 @@ export default function ProfilePage() {
       await refreshProfile()
       setIsEditing(false)
       setNewProfilePicture(null)
-      toast.success('Profile updated successfully! 🎉')
+      toast.success('Profile updated successfully!')
     } catch (error: any) {
       console.error('Error updating profile:', error)
-      toast.error('Failed to update profile', {
-        description: error.message || 'Please try again.',
-      })
+      toast.error('Failed to update profile')
     } finally {
       setLoading(false)
     }
@@ -280,111 +261,94 @@ export default function ProfilePage() {
     loadProfile()
   }
 
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      navigate('/login')
-    } catch (error) {
-      console.error('Sign out error:', error)
-    }
-  }
-
   if (loadingProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center cosmic-bg">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          <p className="mt-4 text-muted-foreground">Loading profile...</p>
+      <div className="min-h-screen mesh-bg flex flex-col lg:flex-row">
+        <Sidebar />
+        <div className="flex-1 w-full flex items-center justify-center px-4 py-12 sm:px-6 lg:px-12 lg:ml-64">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
+            <p className="mt-4 text-foreground font-semibold">Loading profile...</p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen cosmic-bg">
-      {/* Navigation */}
-      <nav className="glass-card border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Brain className="w-5 h-5 text-primary" />
-              </div>
-              <span className="text-xl font-heading font-bold gradient-text">
-                Ambitious Care
-              </span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen mesh-bg flex flex-col lg:flex-row">
+      <Sidebar />
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="flex-1 w-full px-4 py-10 sm:px-6 lg:px-12 lg:ml-64">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
         >
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-4xl font-heading font-bold mb-2">My Profile</h1>
-              <p className="text-muted-foreground">
-                Account type: <span className="text-primary capitalize">{userProfile?.user_role.replace('_', ' ')}</span>
-              </p>
-            </div>
-            {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)}>
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Button variant="ghost" onClick={handleCancel} disabled={loading}>
-                  <X className="w-4 h-4 mr-2" />
-                  Cancel
-                </Button>
-                <Button onClick={handleSave} disabled={loading}>
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
+          {/* Header Section */}
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-4xl font-bold text-foreground mb-2">My Profile</h1>
+                <p className="text-muted-foreground font-medium">
+                  Manage your personal information and settings
+                </p>
               </div>
-            )}
+              {!isEditing ? (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary-foreground hover:text-primary border-2 border-primary transition-colors"
+                >
+                  Edit Profile
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCancel}
+                    disabled={loading}
+                    className="px-6 py-3 bg-white text-foreground rounded-lg font-semibold border-2 border-border hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={loading}
+                    className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary-foreground hover:text-primary border-2 border-primary transition-colors"
+                  >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Role Badge */}
+            <div className="mt-4 inline-block">
+              <span className="px-4 py-2 bg-black text-white rounded-full text-sm font-bold uppercase tracking-wide">
+                {userProfile?.user_role.replace('_', ' ')}
+              </span>
+            </div>
           </div>
 
-          {/* Profile Card */}
-          <div className="glass-card rounded-2xl p-8 space-y-8">
-            {/* Profile Picture */}
-            <div className="flex items-center gap-6">
+          {/* Profile Header Card */}
+          <div className="elevated-card p-8 mb-6">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+              {/* Profile Picture */}
               <div className="relative">
                 {previewUrl ? (
                   <img
                     src={previewUrl}
                     alt="Profile"
-                    className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-black"
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-4 border-border">
-                    <Camera className="w-12 h-12 text-muted-foreground" />
+                  <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-4 border-black">
+                    <User className="w-16 h-16 text-muted-foreground" />
                   </div>
                 )}
                 {isEditing && (
                   <label className="absolute bottom-0 right-0 cursor-pointer">
-                    <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors shadow-lg">
-                      <Camera className="w-5 h-5" />
+                    <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center hover:bg-white hover:text-black border-2 border-black transition-colors">
+                      <Camera className="w-6 h-6" />
                     </div>
                     <input
                       type="file"
@@ -395,313 +359,370 @@ export default function ProfilePage() {
                   </label>
                 )}
               </div>
-              <div>
-                <h2 className="text-2xl font-heading font-semibold">{userProfile?.full_name}</h2>
-                <p className="text-muted-foreground">{userProfile?.email}</p>
+
+              {/* Basic Info Display */}
+              <div className="flex-1 text-center md:text-left">
+                <h2 className="text-3xl font-bold text-foreground mb-2">{userProfile?.full_name}</h2>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-muted-foreground justify-center md:justify-start">
+                    <Mail className="w-4 h-4" />
+                    <span className="font-medium">{userProfile?.email}</span>
+                  </div>
+                  {userProfile?.phone_number && (
+                    <div className="flex items-center gap-2 text-muted-foreground justify-center md:justify-start">
+                      <Phone className="w-4 h-4" />
+                      <span className="font-medium">{userProfile.phone_number}</span>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Professional Quick Stats */}
+              {professionalProfile && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="stat-card text-center">
+                    <div className="text-2xl font-bold text-foreground">{professionalProfile.years_of_experience}</div>
+                    <div className="text-xs text-muted-foreground font-bold uppercase">Years Exp.</div>
+                  </div>
+                  <div className="stat-card text-center">
+                    <div className="text-2xl font-bold text-foreground">£{professionalProfile.appointment_fee}</div>
+                    <div className="text-xs text-muted-foreground font-bold uppercase">Fee</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Basic Information Card */}
+          <div className="modern-card p-8 mb-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-border">
+              <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                <User className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-foreground">Basic Information</h3>
             </div>
 
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-xl font-heading font-semibold flex items-center gap-2">
-                <User className="w-5 h-5 text-primary" />
-                Basic Information
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="full_name">Full Name</Label>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label className="text-sm font-bold text-foreground mb-2 block">Full Name</Label>
                   {isEditing ? (
                     <Input
-                      id="full_name"
                       name="full_name"
                       value={formData.full_name}
                       onChange={handleChange}
+                      className="border-2 border-border focus:border-black"
                     />
                   ) : (
-                    <p className="text-foreground">{userProfile?.full_name}</p>
+                    <p className="text-foreground font-medium p-3 bg-muted rounded-lg">{userProfile?.full_name}</p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <p className="text-muted-foreground text-sm">
-                    {userProfile?.email} (cannot be changed)
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone_number">Phone Number</Label>
+                <div>
+                  <Label className="text-sm font-bold text-foreground mb-2 block">Phone Number</Label>
                   {isEditing ? (
                     <Input
-                      id="phone_number"
                       name="phone_number"
                       value={formData.phone_number}
                       onChange={handleChange}
+                      className="border-2 border-border focus:border-black"
                     />
                   ) : (
-                    <p className="text-foreground">{userProfile?.phone_number}</p>
+                    <p className="text-foreground font-medium p-3 bg-muted rounded-lg">{userProfile?.phone_number || 'Not provided'}</p>
                   )}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="short_bio">Bio</Label>
+              <div>
+                <Label className="text-sm font-bold text-foreground mb-2 block">Bio</Label>
                 {isEditing ? (
                   <Textarea
-                    id="short_bio"
                     name="short_bio"
                     value={formData.short_bio}
                     onChange={handleChange}
-                    className="min-h-[100px]"
+                    className="min-h-[120px] border-2 border-border focus:border-black"
                   />
                 ) : (
-                  <p className="text-foreground">{userProfile?.short_bio || 'No bio provided'}</p>
+                  <p className="text-foreground font-medium p-4 bg-muted rounded-lg whitespace-pre-wrap">
+                    {userProfile?.short_bio || 'No bio provided'}
+                  </p>
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Patient-specific fields */}
-            {userProfile?.user_role === 'patient' && (
-              <div className="space-y-4">
-                <h3 className="text-xl font-heading font-semibold flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-primary" />
-                  Emergency Contact
-                </h3>
+          {/* Patient-specific Card */}
+          {userProfile?.user_role === 'patient' && (
+            <div className="modern-card p-8 mb-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-border">
+                <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                  <Heart className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-foreground">Emergency Contact</h3>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="emergency_contact_name">Emergency Contact Name</Label>
-                    {isEditing ? (
-                      <Input
-                        id="emergency_contact_name"
-                        name="emergency_contact_name"
-                        value={formData.emergency_contact_name}
-                        onChange={handleChange}
-                      />
-                    ) : (
-                      <p className="text-foreground">
-                        {patientProfile?.emergency_contact_name || 'Not provided'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="emergency_contact_phone">Emergency Contact Phone</Label>
-                    {isEditing ? (
-                      <Input
-                        id="emergency_contact_phone"
-                        name="emergency_contact_phone"
-                        value={formData.emergency_contact_phone}
-                        onChange={handleChange}
-                      />
-                    ) : (
-                      <p className="text-foreground">
-                        {patientProfile?.emergency_contact_phone || 'Not provided'}
-                      </p>
-                    )}
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <Label className="text-sm font-bold text-foreground mb-2 block">Emergency Contact Name</Label>
+                  {isEditing ? (
+                    <Input
+                      name="emergency_contact_name"
+                      value={formData.emergency_contact_name}
+                      onChange={handleChange}
+                      className="border-2 border-border focus:border-black"
+                    />
+                  ) : (
+                    <p className="text-foreground font-medium p-3 bg-muted rounded-lg">
+                      {patientProfile?.emergency_contact_name || 'Not provided'}
+                    </p>
+                  )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Languages</Label>
+                <div>
+                  <Label className="text-sm font-bold text-foreground mb-2 block">Emergency Contact Phone</Label>
                   {isEditing ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {COMMON_LANGUAGES.map((language) => (
-                        <button
-                          key={language}
-                          type="button"
-                          onClick={() => handleLanguageToggle(language)}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                            formData.languages.includes(language)
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted hover:bg-muted/80 text-muted-foreground'
-                          }`}
-                        >
-                          {language}
-                        </button>
-                      ))}
-                    </div>
+                    <Input
+                      name="emergency_contact_phone"
+                      value={formData.emergency_contact_phone}
+                      onChange={handleChange}
+                      className="border-2 border-border focus:border-black"
+                    />
                   ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {patientProfile?.languages?.map((lang) => (
-                        <span
-                          key={lang}
-                          className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                        >
-                          {lang}
-                        </span>
-                      ))}
-                    </div>
+                    <p className="text-foreground font-medium p-3 bg-muted rounded-lg">
+                      {patientProfile?.emergency_contact_phone || 'Not provided'}
+                    </p>
                   )}
                 </div>
               </div>
-            )}
 
-            {/* Professional-specific fields */}
-            {userProfile?.user_role !== 'patient' && professionalProfile && (
-              <>
-                <div className="space-y-4">
-                  <h3 className="text-xl font-heading font-semibold flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-primary" />
-                    Professional Details
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="professional_title">Professional Title</Label>
-                      {isEditing ? (
-                        <Input
-                          id="professional_title"
-                          name="professional_title"
-                          value={formData.professional_title}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        <p className="text-foreground">{professionalProfile.professional_title}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="years_of_experience">Years of Experience</Label>
-                      {isEditing ? (
-                        <Input
-                          id="years_of_experience"
-                          name="years_of_experience"
-                          type="number"
-                          value={formData.years_of_experience}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        <p className="text-foreground">{professionalProfile.years_of_experience} years</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="appointment_fee">Appointment Fee (£)</Label>
-                      {isEditing ? (
-                        <Input
-                          id="appointment_fee"
-                          name="appointment_fee"
-                          type="number"
-                          value={formData.appointment_fee}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        <p className="text-foreground">£{professionalProfile.appointment_fee}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="session_duration">Session Duration (minutes)</Label>
-                      {isEditing ? (
-                        <Input
-                          id="session_duration"
-                          name="session_duration"
-                          type="number"
-                          value={formData.session_duration}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        <p className="text-foreground">{professionalProfile.session_duration} minutes</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="practice_company_name">Practice/Company</Label>
-                      {isEditing ? (
-                        <Input
-                          id="practice_company_name"
-                          name="practice_company_name"
-                          value={formData.practice_company_name}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        <p className="text-foreground">
-                          {professionalProfile.practice_company_name || 'Not provided'}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="website">Website</Label>
-                      {isEditing ? (
-                        <Input
-                          id="website"
-                          name="website"
-                          value={formData.website}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        <p className="text-foreground">
-                          {professionalProfile.website ? (
-                            <a
-                              href={professionalProfile.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline"
-                            >
-                              {professionalProfile.website}
-                            </a>
-                          ) : (
-                            'Not provided'
-                          )}
-                        </p>
-                      )}
-                    </div>
+              <div>
+                <Label className="text-sm font-bold text-foreground mb-3 block">Languages</Label>
+                {isEditing ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {COMMON_LANGUAGES.map((language) => (
+                      <button
+                        key={language}
+                        type="button"
+                        onClick={() => handleLanguageToggle(language)}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all border-2 ${
+                          formData.languages.includes(language)
+                            ? 'bg-black text-white border-black'
+                            : 'bg-white text-foreground border-border hover:border-black'
+                        }`}
+                      >
+                        {language}
+                      </button>
+                    ))}
                   </div>
-
-                  <div className="space-y-2">
-                    <Label>Areas of Expertise</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {professionalProfile.areas_of_expertise?.map((area, idx) => (
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {patientProfile?.languages && patientProfile.languages.length > 0 ? (
+                      patientProfile.languages.map((lang) => (
                         <span
-                          key={idx}
-                          className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                          key={lang}
+                          className="px-4 py-2 bg-black text-white rounded-lg text-sm font-semibold"
                         >
-                          {area}
+                          {lang}
                         </span>
-                      ))}
-                    </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground font-medium">No languages specified</p>
+                    )}
                   </div>
+                )}
+              </div>
+            </div>
+          )}
 
-                  <div className="space-y-2">
-                    <Label>Education</Label>
-                    <div className="space-y-2">
-                      {professionalProfile.education?.map((edu, idx) => (
-                        <div key={idx} className="flex items-start gap-2 p-3 bg-muted rounded-lg">
-                          <Award className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                          <span className="text-sm">{edu}</span>
-                        </div>
-                      ))}
-                    </div>
+          {/* Professional-specific Cards */}
+          {userProfile?.user_role !== 'patient' && professionalProfile && (
+            <>
+              {/* Professional Details Card */}
+              <div className="modern-card p-8 mb-6">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-border">
+                  <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                    <Briefcase className="w-5 h-5 text-white" />
                   </div>
+                  <h3 className="text-2xl font-bold text-foreground">Professional Details</h3>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label>Certifications</Label>
-                    <div className="space-y-2">
-                      {professionalProfile.certifications?.map((cert, idx) => (
-                        <div key={idx} className="flex items-start gap-2 p-3 bg-muted rounded-lg">
-                          <Award className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                          <span className="text-sm">{cert}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Languages</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label className="text-sm font-bold text-foreground mb-2 block">Professional Title</Label>
                     {isEditing ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      <Input
+                        name="professional_title"
+                        value={formData.professional_title}
+                        onChange={handleChange}
+                        className="border-2 border-border focus:border-black"
+                      />
+                    ) : (
+                      <p className="text-foreground font-medium p-3 bg-muted rounded-lg">{professionalProfile.professional_title}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-bold text-foreground mb-2 block">Years of Experience</Label>
+                    {isEditing ? (
+                      <Input
+                        name="years_of_experience"
+                        type="number"
+                        value={formData.years_of_experience}
+                        onChange={handleChange}
+                        className="border-2 border-border focus:border-black"
+                      />
+                    ) : (
+                      <p className="text-foreground font-medium p-3 bg-muted rounded-lg">{professionalProfile.years_of_experience} years</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-bold text-foreground mb-2 block">Appointment Fee (£)</Label>
+                    {isEditing ? (
+                      <Input
+                        name="appointment_fee"
+                        type="number"
+                        value={formData.appointment_fee}
+                        onChange={handleChange}
+                        className="border-2 border-border focus:border-black"
+                      />
+                    ) : (
+                      <p className="text-foreground font-medium p-3 bg-muted rounded-lg">£{professionalProfile.appointment_fee}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-bold text-foreground mb-2 block">Session Duration (minutes)</Label>
+                    {isEditing ? (
+                      <Input
+                        name="session_duration"
+                        type="number"
+                        value={formData.session_duration}
+                        onChange={handleChange}
+                        className="border-2 border-border focus:border-black"
+                      />
+                    ) : (
+                      <p className="text-foreground font-medium p-3 bg-muted rounded-lg">{professionalProfile.session_duration} minutes</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-bold text-foreground mb-2 block">Practice/Company</Label>
+                    {isEditing ? (
+                      <Input
+                        name="practice_company_name"
+                        value={formData.practice_company_name}
+                        onChange={handleChange}
+                        className="border-2 border-border focus:border-black"
+                      />
+                    ) : (
+                      <p className="text-foreground font-medium p-3 bg-muted rounded-lg">
+                        {professionalProfile.practice_company_name || 'Not provided'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-bold text-foreground mb-2 block">Website</Label>
+                    {isEditing ? (
+                      <Input
+                        name="website"
+                        value={formData.website}
+                        onChange={handleChange}
+                        className="border-2 border-border focus:border-black"
+                      />
+                    ) : (
+                      <div className="p-3 bg-muted rounded-lg">
+                        {professionalProfile.website ? (
+                          <a
+                            href={professionalProfile.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-foreground font-medium hover:underline flex items-center gap-2"
+                          >
+                            <Globe className="w-4 h-4" />
+                            {professionalProfile.website}
+                          </a>
+                        ) : (
+                          <p className="text-foreground font-medium">Not provided</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Expertise & Qualifications Card */}
+              <div className="modern-card p-8 mb-6">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-border">
+                  <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                    <Award className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground">Expertise & Qualifications</h3>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-sm font-bold text-foreground mb-3 block">Areas of Expertise</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {professionalProfile.areas_of_expertise && professionalProfile.areas_of_expertise.length > 0 ? (
+                        professionalProfile.areas_of_expertise.map((area, idx) => (
+                          <span
+                            key={idx}
+                            className="px-4 py-2 bg-black text-white rounded-lg text-sm font-semibold"
+                          >
+                            {area}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground font-medium">No expertise areas specified</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-bold text-foreground mb-3 block">Education</Label>
+                    <div className="space-y-2">
+                      {professionalProfile.education && professionalProfile.education.length > 0 ? (
+                        professionalProfile.education.map((edu, idx) => (
+                          <div key={idx} className="p-4 bg-muted rounded-lg border-l-4 border-black">
+                            <p className="text-foreground font-medium">{edu}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground font-medium">No education information provided</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-bold text-foreground mb-3 block">Certifications</Label>
+                    <div className="space-y-2">
+                      {professionalProfile.certifications && professionalProfile.certifications.length > 0 ? (
+                        professionalProfile.certifications.map((cert, idx) => (
+                          <div key={idx} className="p-4 bg-muted rounded-lg border-l-4 border-black">
+                            <p className="text-foreground font-medium">{cert}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground font-medium">No certifications provided</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-bold text-foreground mb-3 block">Languages</Label>
+                    {isEditing ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                         {COMMON_LANGUAGES.map((language) => (
                           <button
                             key={language}
                             type="button"
                             onClick={() => handleLanguageToggle(language)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all border-2 ${
                               formData.languages.includes(language)
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-foreground border-border hover:border-black'
                             }`}
                           >
                             {language}
@@ -710,24 +731,27 @@ export default function ProfilePage() {
                       </div>
                     ) : (
                       <div className="flex flex-wrap gap-2">
-                        {professionalProfile.languages?.map((lang) => (
-                          <span
-                            key={lang}
-                            className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                          >
-                            {lang}
-                          </span>
-                        ))}
+                        {professionalProfile.languages && professionalProfile.languages.length > 0 ? (
+                          professionalProfile.languages.map((lang) => (
+                            <span
+                              key={lang}
+                              className="px-4 py-2 bg-black text-white rounded-lg text-sm font-semibold"
+                            >
+                              {lang}
+                            </span>
+                          ))
+                        ) : (
+                          <p className="text-muted-foreground font-medium">No languages specified</p>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </motion.div>
       </div>
     </div>
   )
 }
-
