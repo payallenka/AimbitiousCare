@@ -10,7 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Types for our database
-export type UserRole = 'patient' | 'therapist' | 'relationship_expert' | 'financial_expert' | 'dating_coach' | 'health_wellness_coach' | 'company'
+export type UserRole = 'patient' | 'therapist' | 'relationship_expert' | 'financial_expert' | 'dating_coach' | 'health_wellness_coach' | 'executive_coach' | 'executive_mentor' | 'company' | 'admin'
 
 export interface User {
   id: string

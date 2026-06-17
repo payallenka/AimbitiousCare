@@ -6,6 +6,15 @@
 [build.environment]
   NODE_VERSION = "18"
 
+[functions]
+  # Bundle TS functions (and their _shared imports) with esbuild.
+  node_bundler = "esbuild"
+
+# Run the payment lifecycle cron every hour (72h auto-release, 7-day expert
+# no-response refund, 48h summary reminder, 24h missing-link reminder).
+[functions."scheduled-jobs"]
+  schedule = "@hourly"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

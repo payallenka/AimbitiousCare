@@ -22,6 +22,7 @@ import AIChatbotPage from './pages/AIChatbotPage'
 import ProfessionalAvailabilityPage from './pages/ProfessionalAvailabilityPage'
 import AppointmentInboxPage from './pages/AppointmentInboxPage'
 import BookAppointmentPage from './pages/BookAppointmentPage'
+import MockPaymentPage from './pages/MockPaymentPage'
 import PatientAppointmentsPage from './pages/PatientAppointmentsPage'
 import PostsPage from './pages/PostsPage'
 import DealsPage from './pages/DealsPage'
@@ -34,6 +35,7 @@ import CompanyEmployeesPage from './pages/CompanyEmployeesPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import InteractiveAvatarPage from './pages/InteractiveAvatarPage'
 import SuperAdminDashboardPage from './pages/SuperAdminDashboardPage'
+import AdminDisputesPage from './pages/AdminDisputesPage'
 
 const queryClient = new QueryClient()
 
@@ -240,6 +242,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/mock-payment"
+        element={
+          <ProtectedRoute>
+            <MockPaymentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/interactive-avatar"
         element={
           <ProtectedRoute allowedRoles={['patient']}>
@@ -332,6 +342,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute requiresProfile={false} allowSuperAdmin>
             <SuperAdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/disputes"
+        element={
+          <ProtectedRoute requiresProfile={false} allowSuperAdmin>
+            <AdminDisputesPage />
           </ProtectedRoute>
         }
       />

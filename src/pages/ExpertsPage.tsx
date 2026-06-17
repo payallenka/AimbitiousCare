@@ -39,6 +39,8 @@ const ROLE_LABELS: Record<string, string> = {
   financial_expert: 'Financial Expert',
   dating_coach: 'Dating Coach',
   health_wellness_coach: 'Health & Wellness Coach',
+  executive_coach: 'Executive Coach',
+  executive_mentor: 'Executive Mentor',
 }
 
 export default function ExpertsPage() {

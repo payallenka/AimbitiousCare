@@ -76,6 +76,8 @@ const ROLE_TITLES: Record<string, string> = {
   financial_expert: 'Financial Expert',
   dating_coach: 'Dating Coach',
   health_wellness_coach: 'Health & Wellness Coach',
+  executive_coach: 'Executive Coach',
+  executive_mentor: 'Executive Mentor',
 }
 
 const SESSION_DURATIONS = ['30', '45', '60', '90', '120']

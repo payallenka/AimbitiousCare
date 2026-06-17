@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, Clock, MessageCircle, CheckCircle, XCircle, AlertCircle, Plus } from 'lucide-react'
+import { Calendar, Clock, MessageCircle, CheckCircle, XCircle, AlertCircle, Plus, Video, MapPin, ShieldAlert, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -8,6 +8,16 @@ import { toast } from 'sonner'
 import Sidebar from '@/components/Sidebar'
 import { InfoDialogButton } from '@/components/InfoDialog'
 import { useNavigate } from 'react-router-dom'
+import {
+  cancelAppointment as cancelAppointmentApi,
+  workerConfirm,
+  raiseDispute,
+  rescheduleResponse,
+  formatPence,
+  sessionHasEnded,
+  IS_MOCK_PAYMENTS,
+  PAYMENT_STATUS_LABELS,
+} from '@/lib/payments'
 
 const DEFAULT_AVATAR = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect width="64" height="64" fill="%23f5f5dc"/%3E%3Ccircle cx="32" cy="24" r="12" fill="%23000"/%3E%3Cpath fill="%23000" d="M16 54c0-8.8 7.2-16 16-16s16 7.2 16 16z"/%3E%3C/svg%3E'
 
@@ -17,9 +27,22 @@ interface AppointmentRequest {
   requested_date: string
   requested_time: string
   duration_minutes: number
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show' | 'reschedule_pending' | 'awaiting_confirmation' | 'disputed' | 'under_investigation'
+  session_type?: 'online' | 'offline'
+  online_platform?: 'google_meet' | 'zoom'
+  meeting_link?: string
+  location?: string
+  payment_status?: string
+  amount_pence?: number
+  proposed_date?: string
+  proposed_time?: string
+  reschedule_count?: number
+  worker_confirmed_at?: string
+  session_completed_at?: string
+  session_summary?: string
   patient_message?: string
   professional_response?: string
+  reschedule_reason?: string
   confirmed_date?: string
   confirmed_time?: string
   created_at: string
@@ -117,25 +140,46 @@ export default function PatientAppointmentsPage() {
     }
   }
 
-  const cancelAppointment = async (appointmentId: string) => {
-    if (!userProfile) return
+  const [busyId, setBusyId] = useState<string | null>(null)
 
+  const withBusy = async (id: string, fn: () => Promise<any>, successMsg: string) => {
+    setBusyId(id)
     try {
-      const { error } = await supabase
-        .from('appointment_requests')
-        .update({ status: 'cancelled' })
-        .eq('id', appointmentId)
-        .eq('patient_id', userProfile.id)
-
-      if (error) throw error
-
-      toast.success('Appointment cancelled')
+      await fn()
+      toast.success(successMsg)
       fetchAppointments()
     } catch (error: any) {
-      console.error('Error cancelling appointment:', error)
-      toast.error('Failed to cancel appointment')
+      console.error(error)
+      toast.error('Action failed', { description: error.message })
+    } finally {
+      setBusyId(null)
     }
   }
+
+  const handleCancel = (id: string) =>
+    withBusy(id, () => cancelAppointmentApi(id), 'Appointment cancelled. Any eligible refund has been initiated.')
+
+  const handleConfirmSession = (id: string) =>
+    withBusy(id, () => workerConfirm(id), 'Session confirmed — thank you!')
+
+  const handleReportIssue = (id: string) => {
+    const reason = window.prompt('Briefly describe the issue with this session:')
+    if (!reason) return
+    withBusy(id, () => raiseDispute({ appointmentId: id, category: 'standard', reason }), 'Issue reported. Our team will review it.')
+  }
+
+  const handleSafetyConcern = (id: string) => {
+    if (!window.confirm('Are you experiencing a safety concern during this session? This will alert our team immediately and freeze the payment.')) return
+    const reason = window.prompt('Optionally add detail (you can leave this blank):') || 'Emergency safety concern reported'
+    withBusy(id, () => raiseDispute({ appointmentId: id, category: 'safety', reason }), '🚨 Safety concern reported. Our team has been alerted.')
+  }
+
+  const handleReschedule = (id: string, action: 'accept' | 'reject') =>
+    withBusy(
+      id,
+      () => rescheduleResponse(id, action),
+      action === 'accept' ? 'New time accepted.' : 'Reschedule declined — a full refund has been initiated.',
+    )
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -163,13 +207,21 @@ export default function PatientAppointmentsPage() {
           icon: CheckCircle,
           label: 'Completed'
         }
-      case 'no_show': 
-        return { 
-          color: 'bg-white/40 text-black/50 border border-black/15', 
+      case 'no_show':
+        return {
+          color: 'bg-white/40 text-black/50 border border-black/15',
           icon: XCircle,
           label: 'No Show'
         }
-      default: 
+      case 'reschedule_pending':
+        return { color: 'bg-amber-100 text-amber-700 border border-amber-200', icon: RefreshCw, label: 'Reschedule Proposed' }
+      case 'awaiting_confirmation':
+        return { color: 'bg-blue-100 text-blue-700 border border-blue-200', icon: AlertCircle, label: 'Confirm Session' }
+      case 'disputed':
+        return { color: 'bg-red-100 text-red-700 border border-red-200', icon: ShieldAlert, label: 'Disputed' }
+      case 'under_investigation':
+        return { color: 'bg-red-100 text-red-700 border border-red-200', icon: ShieldAlert, label: 'Under Investigation' }
+      default:
         return { 
           color: 'bg-white/60 text-black/60 border border-black/15', 
           icon: AlertCircle,
@@ -296,7 +348,7 @@ export default function PatientAppointmentsPage() {
                   transition={{ delay: index * 0.05 }}
                   className="group relative overflow-hidden rounded-3xl border border-black/10 bg-white/60 backdrop-blur-xl p-6 transition-all hover:-translate-y-1 hover:shadow-2xl"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/5 opacity-0 group-hover:opacity-100 transition" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/5 opacity-0 group-hover:opacity-100 transition pointer-events-none" />
 
                   <div className="relative flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-6">
                     <div className="flex items-start gap-4">
@@ -371,26 +423,110 @@ export default function PatientAppointmentsPage() {
                     </div>
                   )}
 
+                  {/* Reschedule proposal banner */}
+                  {appointment.status === 'reschedule_pending' && appointment.proposed_date && (
+                    <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                      <p className="text-sm font-semibold text-amber-800">New time proposed</p>
+                      <p className="text-sm text-amber-700 mt-1">
+                        {formatDate(appointment.proposed_date)} at {appointment.proposed_time && formatTime(appointment.proposed_time)}
+                        {appointment.reschedule_reason ? ` — ${appointment.reschedule_reason}` : ''}
+                      </p>
+                      {(appointment.reschedule_count || 0) > 3 && (
+                        <p className="text-xs text-red-600 mt-2">
+                          This expert has rescheduled {appointment.reschedule_count} times. You can decline and receive a full refund.
+                        </p>
+                      )}
+                      <div className="flex gap-2 mt-3">
+                        <Button size="sm" onClick={() => handleReschedule(appointment.id, 'accept')} disabled={busyId === appointment.id}>Accept new time</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleReschedule(appointment.id, 'reject')} disabled={busyId === appointment.id}>Decline + refund</Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Online session join + safety button */}
+                  {appointment.status === 'confirmed' && appointment.session_type === 'online' && (
+                    <div className="mb-4 flex flex-wrap items-center gap-3">
+                      {appointment.meeting_link ? (
+                        <a href={appointment.meeting_link} target="_blank" rel="noreferrer">
+                          <Button size="sm"><Video className="w-4 h-4 mr-2" /> Join {appointment.online_platform === 'zoom' ? 'Zoom' : 'Google Meet'}</Button>
+                        </a>
+                      ) : (
+                        <span className="text-xs text-black/50">Meeting link not added yet</span>
+                      )}
+                      <Button size="sm" variant="ghost" onClick={() => handleSafetyConcern(appointment.id)} className="border border-red-200 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white">
+                        <ShieldAlert className="w-4 h-4 mr-2" /> Report Safety Concern
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Offline session location (no Join / safety button — those are online-only) */}
+                  {appointment.status === 'confirmed' && appointment.session_type === 'offline' && (
+                    <div className="mb-4 rounded-2xl border border-black/10 bg-white/70 p-4 flex items-start gap-2 text-sm text-black/70">
+                      <MapPin className="w-4 h-4 mt-0.5 text-black" />
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.3em] text-black/40 mb-1">Location</p>
+                        {appointment.location || 'The expert has not added a location yet.'}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Session summary (after completion) */}
+                  {appointment.session_summary && (
+                    <div className="mb-4">
+                      <h4 className="text-xs uppercase tracking-[0.3em] text-black/40 mb-2">Session Summary</h4>
+                      <p className="text-sm text-black/70 leading-relaxed rounded-2xl border border-black/10 bg-white/70 p-4">{appointment.session_summary}</p>
+                    </div>
+                  )}
+
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between pt-4 border-t border-black/10">
                     <div className="text-xs text-black/50">
                       Requested {new Date(appointment.created_at).toLocaleDateString('en-GB')}
-                      {appointment.professional.professional_profiles?.appointment_fee && (
-                        <span className="ml-4">
-                          Fee <strong>£{appointment.professional.professional_profiles.appointment_fee}</strong>
-                        </span>
+                      <span className="ml-4">
+                        Paid <strong>{formatPence(appointment.amount_pence) !== '—' ? formatPence(appointment.amount_pence) : (appointment.professional.professional_profiles?.appointment_fee ? `£${appointment.professional.professional_profiles.appointment_fee}` : '—')}</strong>
+                      </span>
+                      {appointment.payment_status && (
+                        <span className="ml-4">{PAYMENT_STATUS_LABELS[appointment.payment_status] || appointment.payment_status}</span>
                       )}
                     </div>
 
-                    {appointment.status === 'pending' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => cancelAppointment(appointment.id)}
-                        className="border border-black/15 bg-white/70 hover:bg-black hover:text-white"
-                      >
-                        <XCircle className="w-4 h-4 mr-2" /> Cancel Request
-                      </Button>
-                    )}
+                    {(() => {
+                      const canConfirm =
+                        ['confirmed', 'awaiting_confirmation'].includes(appointment.status) &&
+                        !appointment.worker_confirmed_at &&
+                        (IS_MOCK_PAYMENTS || sessionHasEnded(appointment))
+                      const waitingForExpert =
+                        !!appointment.worker_confirmed_at && appointment.status !== 'completed'
+                      return (
+                        <div className="flex flex-wrap items-center gap-2">
+                          {canConfirm && (
+                            <>
+                              <Button size="sm" onClick={() => handleConfirmSession(appointment.id)} disabled={busyId === appointment.id}>
+                                <CheckCircle className="w-4 h-4 mr-2" /> Confirm Session
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => handleReportIssue(appointment.id)} disabled={busyId === appointment.id} className="border border-black/15 bg-white/70">
+                                Report Issue
+                              </Button>
+                            </>
+                          )}
+                          {waitingForExpert && (
+                            <span className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-full px-3 py-1.5">
+                              ✓ You confirmed — waiting for the expert to complete the session
+                            </span>
+                          )}
+                          {(appointment.status === 'pending' || appointment.status === 'confirmed') && !appointment.worker_confirmed_at && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCancel(appointment.id)}
+                              disabled={busyId === appointment.id}
+                              className="border border-black/15 bg-white/70 hover:bg-black hover:text-white"
+                            >
+                              <XCircle className="w-4 h-4 mr-2" /> Cancel
+                            </Button>
+                          )}
+                        </div>
+                      )
+                    })()}
                   </div>
                 </motion.div>
               )

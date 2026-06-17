@@ -90,6 +90,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Admin is primarily decided by the user's role. The email allowlist remains
+  // an optional fallback (used to bootstrap, and harmless when left empty).
+  useEffect(() => {
+    const email = user?.email?.toLowerCase()
+    const byRole = userProfile?.user_role === 'admin'
+    const byEmail = email ? superAdminEmails.includes(email) : false
+    setIsSuperAdmin(byRole || byEmail)
+  }, [user, userProfile])
+
   const signIn = async (email: string, password: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({

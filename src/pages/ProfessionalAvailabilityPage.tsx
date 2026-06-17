@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import Sidebar from '@/components/Sidebar'
 import { InfoDialogButton } from '@/components/InfoDialog'
+import PayoutSetupCard from '@/components/PayoutSetupCard'
 
 interface AvailabilitySlot {
   id?: string
@@ -150,6 +151,9 @@ export default function ProfessionalAvailabilityPage() {
       <Sidebar />
 
       <div className="flex-1 w-full px-4 py-12 sm:px-6 lg:px-12 lg:ml-64">
+        {/* Stripe Connect payout onboarding */}
+        <PayoutSetupCard />
+
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}

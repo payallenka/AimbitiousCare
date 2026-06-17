@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import NotificationsBell from '@/components/NotificationsBell'
 
 interface NavItem {
   label: string
@@ -113,6 +114,8 @@ export default function Sidebar() {
       >
         <div className="h-16 flex items-center justify-between px-6 border-b border-border">
           <span className="text-xl font-bold text-foreground">Ambitious Care</span>
+          <div className="flex items-center gap-2">
+          <NotificationsBell />
           <button
             type="button"
             aria-label="Close navigation"
@@ -124,6 +127,7 @@ export default function Sidebar() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto py-4">

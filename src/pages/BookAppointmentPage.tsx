@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, Send, ArrowLeft, Check, AlertCircle, Calendar as CalendarIcon, Clock as ClockIcon } from 'lucide-react'
+import { User, ArrowLeft, Check, AlertCircle, Calendar as CalendarIcon, Clock as ClockIcon, Video, MapPin, CreditCard, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { createCheckout } from '@/lib/payments'
 import { toast } from 'sonner'
 import Sidebar from '@/components/Sidebar'
 import { InfoDialogButton } from '@/components/InfoDialog'
@@ -37,6 +39,7 @@ const DAYS_OF_WEEK = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'f
 
 export default function BookAppointmentPage() {
   const { userProfile } = useAuth()
+  const navigate = useNavigate()
   const [experts, setExperts] = useState<Expert[]>([])
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null)
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([])
@@ -44,6 +47,8 @@ export default function BookAppointmentPage() {
   const [submitting, setSubmitting] = useState(false)
   const [step, setStep] = useState(1)
 
+  const [sessionType, setSessionType] = useState<'online' | 'offline' | ''>('')
+  const [onlinePlatform, setOnlinePlatform] = useState<'google_meet' | 'zoom' | ''>('')
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
   const [message, setMessage] = useState('')
@@ -159,12 +164,15 @@ export default function BookAppointmentPage() {
     return [...new Set(times)].sort()
   }
 
-  const handleSubmit = async () => {
-    if (!userProfile || !selectedExpert || !selectedDate || !selectedTime) {
+  const handlePayAndBook = async () => {
+    if (!userProfile || !selectedExpert || !selectedDate || !selectedTime || !sessionType) {
       toast.error('Please fill in all required fields')
       return
     }
-
+    if (sessionType === 'online' && !onlinePlatform) {
+      toast.error('Please choose a meeting platform')
+      return
+    }
     if (!consent) {
       toast.error('Please provide your consent to proceed')
       return
@@ -172,44 +180,33 @@ export default function BookAppointmentPage() {
 
     setSubmitting(true)
     try {
-      const { error } = await supabase
-        .from('appointment_requests')
-        .insert({
-          patient_id: userProfile.id,
-          professional_id: selectedExpert.id,
-          requested_date: selectedDate,
-          requested_time: selectedTime,
-          duration_minutes: 60,
-          patient_message: message || null,
-          patient_phone: userProfile.phone_number,
-          patient_email: userProfile.email,
-          patient_preferred_contact: 'email',
-          patient_concerns: concerns || null,
-          patient_goals: goals || null,
-          patient_consent_given: consent
-        })
-
-      if (error) throw error
-
-      toast.success('✅ Appointment request sent!', {
-        description: 'The expert will review and respond soon'
+      // Server creates the appointment draft + a Stripe Checkout session, then
+      // we hand the user off to Stripe's hosted payment page. The booking is
+      // confirmed by the webhook once payment succeeds.
+      const { url } = await createCheckout({
+        professionalId: selectedExpert.id,
+        requestedDate: selectedDate,
+        requestedTime: selectedTime,
+        sessionType,
+        onlinePlatform: sessionType === 'online' ? onlinePlatform || undefined : undefined,
+        message: message || undefined,
+        concerns: concerns || undefined,
+        goals: goals || undefined,
+        consent,
       })
-      
-      // Reset
-      setSelectedExpert(null)
-      setSelectedDate('')
-      setSelectedTime('')
-      setMessage('')
-      setConcerns('')
-      setGoals('')
-      setConsent(false)
-      setStep(1)
+      if (!url) throw new Error('No checkout URL returned')
+      // In-app mock page → client-side navigate (no reload, keeps auth state).
+      // Real Stripe Checkout → external URL → hard redirect.
+      if (url.startsWith('http')) {
+        window.location.href = url
+      } else {
+        navigate(url)
+      }
     } catch (error: any) {
-      console.error('Error booking appointment:', error)
-      toast.error('Failed to book appointment', {
-        description: error.message || 'Please try again'
+      console.error('Error starting checkout:', error)
+      toast.error('Could not start payment', {
+        description: error.message || 'Please try again',
       })
-    } finally {
       setSubmitting(false)
     }
   }
@@ -388,8 +385,62 @@ export default function BookAppointmentPage() {
                 </div>
               </div>
 
-              {/* Date Selection */}
+              {/* Session Type */}
               <div className="space-y-4">
+                <div>
+                  <Label className="text-base font-semibold mb-2 block">Session Type</Label>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    {([
+                      { key: 'online', label: 'Online', icon: Video, desc: 'Video call' },
+                      { key: 'offline', label: 'Offline', icon: MapPin, desc: 'In person' },
+                    ] as const).map(({ key, label, icon: Icon, desc }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          setSessionType(key)
+                          if (key === 'offline') setOnlinePlatform('')
+                        }}
+                        className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${
+                          sessionType === key
+                            ? 'border-primary ring-2 ring-primary/40 bg-primary/5'
+                            : 'border-black/10 hover:border-primary/40'
+                        }`}
+                      >
+                        <Icon className="w-5 h-5 text-primary" />
+                        <div>
+                          <p className="font-medium">{label}</p>
+                          <p className="text-xs text-muted-foreground">{desc}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Online platform */}
+                {sessionType === 'online' && (
+                  <div>
+                    <Label className="text-base font-semibold mb-2 block">Preferred Platform</Label>
+                    <div className="grid grid-cols-2 gap-3 mt-2">
+                      {([
+                        { key: 'google_meet', label: 'Google Meet' },
+                        { key: 'zoom', label: 'Zoom' },
+                      ] as const).map(({ key, label }) => (
+                        <Button
+                          key={key}
+                          type="button"
+                          variant={onlinePlatform === key ? 'default' : 'outline'}
+                          onClick={() => setOnlinePlatform(key)}
+                          className="h-auto py-3"
+                        >
+                          {label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Date Selection */}
                 <div>
                   <Label htmlFor="date" className="text-base font-semibold mb-2 flex items-center gap-2">
                     <CalendarIcon className="w-5 h-5" />
@@ -450,7 +501,7 @@ export default function BookAppointmentPage() {
                 </Button>
                 <Button
                   onClick={() => setStep(3)}
-                  disabled={!selectedDate || !selectedTime}
+                  disabled={!sessionType || (sessionType === 'online' && !onlinePlatform) || !selectedDate || !selectedTime}
                   className="flex-1"
                 >
                   Continue
@@ -517,7 +568,7 @@ export default function BookAppointmentPage() {
                     className="mt-1"
                   />
                   <Label htmlFor="consent" className="text-sm cursor-pointer">
-                    I consent to sharing my information with the selected professional for appointment booking purposes. I understand this is a request and will be reviewed by the expert.
+                    I consent to sharing my information with the selected professional, and I authorise payment to be collected now and held securely until the session is completed. I understand my booking is subject to the expert's approval, and a full refund is issued if it is declined.
                   </Label>
                 </div>
 
@@ -526,6 +577,10 @@ export default function BookAppointmentPage() {
                   <h3 className="font-semibold mb-2">Appointment Summary</h3>
                   <div className="space-y-1 text-sm">
                     <p><strong>Expert:</strong> {selectedExpert.full_name}</p>
+                    <p><strong>Session:</strong> {sessionType === 'online' ? 'Online' : 'Offline'}
+                      {sessionType === 'online' && onlinePlatform
+                        ? ` · ${onlinePlatform === 'google_meet' ? 'Google Meet' : 'Zoom'}`
+                        : ''}</p>
                     <p><strong>Date:</strong> {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', {
                       weekday: 'long',
                       year: 'numeric',
@@ -536,11 +591,15 @@ export default function BookAppointmentPage() {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}</p>
-                    <p><strong>Duration:</strong> 60 minutes</p>
+                    <p><strong>Duration:</strong> {selectedExpert.professional_profiles?.session_duration || 60} minutes</p>
                     {selectedExpert.professional_profiles?.appointment_fee && (
-                      <p><strong>Fee:</strong> £{selectedExpert.professional_profiles.appointment_fee}</p>
+                      <p className="text-base pt-1"><strong>Total to pay:</strong> £{selectedExpert.professional_profiles.appointment_fee}</p>
                     )}
                   </div>
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3">
+                    <Lock className="w-3.5 h-3.5" />
+                    Your payment is held securely and only released to the expert after your session.
+                  </p>
                 </div>
               </div>
 
@@ -551,19 +610,19 @@ export default function BookAppointmentPage() {
                   Back
                 </Button>
                 <Button
-                  onClick={handleSubmit}
+                  onClick={handlePayAndBook}
                   disabled={submitting || !consent}
                   className="flex-1"
                 >
                   {submitting ? (
                     <>
                       <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-                      Sending...
+                      Redirecting to payment...
                     </>
                   ) : (
                     <>
-                      <Send className="w-4 h-4 mr-2" />
-                      Send Request
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Pay{selectedExpert.professional_profiles?.appointment_fee ? ` £${selectedExpert.professional_profiles.appointment_fee}` : ''} &amp; Book
                     </>
                   )}
                 </Button>
