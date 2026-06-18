@@ -1,29 +1,18 @@
 import { Handler } from '@netlify/functions'
 import { supabaseAdmin } from './_shared/supabaseAdmin'
-import { getCallingUser } from './_shared/domain'
+import { getAdminCaller } from './_shared/domain'
 import { ok, badRequest, serverError, preflight } from './_shared/http'
 
-// Admin is decided by role; the email allowlist is an optional fallback.
-function isAdmin(role: string, email: string): boolean {
-  if (role === 'admin') return true
-  const emails = (process.env.SUPER_ADMIN_EMAILS || process.env.VITE_SUPER_ADMIN_EMAILS || '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean)
-  return emails.includes(email.toLowerCase())
-}
-
 // Returns all disputes/safety cases with appointment + participant context for
-// the admin dashboard. Service-role read bypasses RLS; access is gated on the
-// super-admin email allowlist.
+// the admin dashboard. Service-role read bypasses RLS; gated to admins
+// (role=admin or the SUPER_ADMIN_EMAILS allowlist).
 export const handler: Handler = async (event) => {
   const pre = preflight(event)
   if (pre) return pre
 
   try {
-    const caller = await getCallingUser(event.headers.authorization)
-    if (!caller) return badRequest('Not authenticated')
-    if (!isAdmin(caller.role, caller.email)) return badRequest('Admin only')
+    const caller = await getAdminCaller(event.headers.authorization)
+    if (!caller) return badRequest('Admin only')
 
     const { data: disputes } = await supabaseAdmin
       .from('disputes')

@@ -1,7 +1,7 @@
 import { Handler } from '@netlify/functions'
 import { stripe, MOCK_PAYMENTS } from './_shared/stripe'
 import { supabaseAdmin } from './_shared/supabaseAdmin'
-import { getCallingUser } from './_shared/domain'
+import { getAdminCaller } from './_shared/domain'
 import { refundAppointment } from './_shared/payout'
 import { notify } from './_shared/notify'
 import { ok, badRequest, serverError, preflight } from './_shared/http'
@@ -13,27 +13,16 @@ interface Body {
   adminNotes?: string
 }
 
-// Admin is decided by role; the email allowlist is an optional fallback.
-function isAdmin(role: string, email: string): boolean {
-  if (role === 'admin') return true
-  const emails = (process.env.SUPER_ADMIN_EMAILS || process.env.VITE_SUPER_ADMIN_EMAILS || '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean)
-  return emails.includes(email.toLowerCase())
-}
-
-// Admin resolves a dispute/safety case. This is an authority override: it can
-// move money even though the automatic-payout conditions are not all met.
+// Resolves a dispute/safety case. Authority override: can move money even when
+// the automatic-payout conditions are not all met. Admin-only.
 export const handler: Handler = async (event) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST') return badRequest('Method not allowed')
 
   try {
-    const caller = await getCallingUser(event.headers.authorization)
-    if (!caller) return badRequest('Not authenticated')
-    if (!isAdmin(caller.role, caller.email)) return badRequest('Admin only')
+    const caller = await getAdminCaller(event.headers.authorization)
+    if (!caller) return badRequest('Admin only')
 
     const body: Body = JSON.parse(event.body || '{}')
     if (!body.disputeId || !body.resolution) return badRequest('Missing disputeId/resolution')
@@ -93,7 +82,7 @@ export const handler: Handler = async (event) => {
         worker_refund_pence: workerRefundPence || null,
         expert_payout_pence: expertPayoutPence || null,
         admin_notes: body.adminNotes || null,
-        resolved_by: caller.userId,
+        resolved_by: caller?.userId ?? null,
         resolved_at: new Date().toISOString(),
       })
       .eq('id', dispute.id)
