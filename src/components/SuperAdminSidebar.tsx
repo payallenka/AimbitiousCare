@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
@@ -24,6 +25,7 @@ const adminNavItems: AdminNavItem[] = [
 
 export default function SuperAdminSidebar() {
   const { signOut, user } = useAuth()
+  const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const handleScroll = (id: string) => {
@@ -92,6 +94,17 @@ export default function SuperAdminSidebar() {
 
         <nav className="flex-1 overflow-y-auto py-6">
           <div className="space-y-2 px-4">
+            {/* Dedicated route (not an in-page scroll target) */}
+            <button
+              onClick={() => { navigate('/admin/disputes'); setMobileOpen(false) }}
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-white bg-black transition-colors hover:bg-black/80"
+            >
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-[10px] font-semibold tracking-[0.2em] text-white">
+                DS
+              </span>
+              <span>Disputes &amp; Safety</span>
+            </button>
+
             {adminNavItems.map((item) => (
               <button
                 key={item.target}
