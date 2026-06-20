@@ -15,7 +15,7 @@ export default function AdminDisputesPage() {
   const [disputes, setDisputes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'open' | 'all'>('open')
+  const [filter, setFilter] = useState<'open' | 'resolved' | 'all'>('open')
   const [refundPounds, setRefundPounds] = useState<Record<string, string>>({})
   const [notes, setNotes] = useState<Record<string, string>>({})
 
@@ -56,7 +56,13 @@ export default function AdminDisputesPage() {
     }
   }
 
-  const visible = disputes.filter((d) => (filter === 'open' ? ['open', 'under_review'].includes(d.status) : true))
+  const visible = disputes.filter((d) => {
+    if (filter === 'open') return ['open', 'under_review'].includes(d.status)
+    if (filter === 'resolved') return ['resolved', 'rejected'].includes(d.status)
+    return true
+  })
+  const resolvedCount = disputes.filter((d) => ['resolved', 'rejected'].includes(d.status)).length
+  const openCount = disputes.filter((d) => ['open', 'under_review'].includes(d.status)).length
 
   if (loading) {
     return (
@@ -78,9 +84,13 @@ export default function AdminDisputesPage() {
             <p className="text-black/60 mt-1">Resolve disputes and safety concerns. Payouts stay blocked until resolved.</p>
           </div>
           <div className="flex gap-2">
-            {(['open', 'all'] as const).map((f) => (
-              <Button key={f} variant={filter === f ? 'default' : 'outline'} onClick={() => setFilter(f)} className="capitalize">
-                {f}
+            {([
+              { key: 'open', label: `Open (${openCount})` },
+              { key: 'resolved', label: `History (${resolvedCount})` },
+              { key: 'all', label: `All (${disputes.length})` },
+            ] as const).map((f) => (
+              <Button key={f.key} variant={filter === f.key ? 'default' : 'outline'} onClick={() => setFilter(f.key)}>
+                {f.label}
               </Button>
             ))}
           </div>
@@ -89,7 +99,9 @@ export default function AdminDisputesPage() {
         {visible.length === 0 ? (
           <div className="rounded-3xl border border-black/10 bg-white/60 backdrop-blur-xl p-12 text-center">
             <AlertCircle className="w-12 h-12 text-black/20 mx-auto mb-4" />
-            <p className="text-black/60">No {filter === 'open' ? 'open ' : ''}disputes right now.</p>
+            <p className="text-black/60">
+              {filter === 'resolved' ? 'No resolved cases yet.' : filter === 'open' ? 'No open disputes right now.' : 'No disputes yet.'}
+            </p>
           </div>
         ) : (
           <div className="space-y-5">
@@ -134,11 +146,26 @@ export default function AdminDisputesPage() {
                   )}
 
                   {resolved ? (
-                    <div className="text-sm text-black/60">
-                      Resolved: <strong>{d.resolution_type}</strong>
-                      {d.worker_refund_pence ? ` · refunded ${formatPence(d.worker_refund_pence)}` : ''}
-                      {d.expert_payout_pence ? ` · paid expert ${formatPence(d.expert_payout_pence)}` : ''}
-                      {d.admin_notes ? ` · ${d.admin_notes}` : ''}
+                    <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold text-green-800 uppercase tracking-wider text-xs">
+                          {d.status === 'rejected' ? 'Dismissed' : 'Resolved'} · {(d.resolution_type || '').replace(/_/g, ' ')}
+                        </span>
+                        {d.resolved_at && (
+                          <span className="text-xs text-green-700">
+                            {new Date(d.resolved_at).toLocaleString('en-GB')}
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-green-900/80">
+                        {d.worker_refund_pence ? (
+                          <div className="flex justify-between"><span>Refunded to worker</span><span>{formatPence(d.worker_refund_pence)}</span></div>
+                        ) : null}
+                        {d.expert_payout_pence ? (
+                          <div className="flex justify-between"><span>Paid to expert</span><span>{formatPence(d.expert_payout_pence)}</span></div>
+                        ) : null}
+                      </div>
+                      {d.admin_notes && <p className="mt-2 text-green-900/70"><span className="text-green-700">Notes:</span> {d.admin_notes}</p>}
                     </div>
                   ) : (
                     <div className="space-y-3">
