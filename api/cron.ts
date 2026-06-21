@@ -1,6 +1,6 @@
-import { runScheduledJobs } from '../netlify/functions/_shared/jobs'
+import { runScheduledJobs } from './_impl/_shared/jobs.js'
 
-// Vercel cron endpoint (configured in vercel.json). Runs the hourly payment
+// Vercel cron endpoint (configured in vercel.json). Runs the daily payment
 // lifecycle rules. Optionally protected by CRON_SECRET.
 export default async function handler(req: any, res: any) {
   const secret = process.env.CRON_SECRET

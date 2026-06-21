@@ -1,23 +1,36 @@
 // Single router for all interactive endpoints (Vercel Hobby caps a deployment
-// at 12 serverless functions). The frontend posts to /api/fn with
-// `__fn: '<name>'` in the JSON body. Handlers are lazy-loaded inside the
-// try/catch so any module-load error is RETURNED as JSON instead of crashing
-// the function with FUNCTION_INVOCATION_FAILED.
+// at 12 serverless functions). Posts to /api/fn with `__fn: '<name>'`.
+//
+// Handlers live under api/_impl and are imported STATICALLY so Vercel compiles
+// and includes them (it runs native ESM and only traces static imports; and
+// they must live inside api/, since cross-directory imports aren't deployed).
 
-// Static-literal dynamic imports — bundler-analyzable, loaded on demand.
-const loaders: Record<string, () => Promise<any>> = {
-  'create-checkout': () => import('../netlify/functions/create-checkout'),
-  'mock-payment': () => import('../netlify/functions/mock-payment'),
-  'connect-onboard': () => import('../netlify/functions/connect-onboard'),
-  'connect-status': () => import('../netlify/functions/connect-status'),
-  'expert-decision': () => import('../netlify/functions/expert-decision'),
-  'complete-session': () => import('../netlify/functions/complete-session'),
-  'worker-confirm': () => import('../netlify/functions/worker-confirm'),
-  'reschedule-response': () => import('../netlify/functions/reschedule-response'),
-  'cancel-appointment': () => import('../netlify/functions/cancel-appointment'),
-  'raise-dispute': () => import('../netlify/functions/raise-dispute'),
-  'admin-disputes': () => import('../netlify/functions/admin-disputes'),
-  'admin-resolve-dispute': () => import('../netlify/functions/admin-resolve-dispute'),
+import { handler as createCheckout } from './_impl/create-checkout.js'
+import { handler as mockPayment } from './_impl/mock-payment.js'
+import { handler as connectOnboard } from './_impl/connect-onboard.js'
+import { handler as connectStatus } from './_impl/connect-status.js'
+import { handler as expertDecision } from './_impl/expert-decision.js'
+import { handler as completeSession } from './_impl/complete-session.js'
+import { handler as workerConfirm } from './_impl/worker-confirm.js'
+import { handler as rescheduleResponse } from './_impl/reschedule-response.js'
+import { handler as cancelAppointment } from './_impl/cancel-appointment.js'
+import { handler as raiseDispute } from './_impl/raise-dispute.js'
+import { handler as adminDisputes } from './_impl/admin-disputes.js'
+import { handler as adminResolveDispute } from './_impl/admin-resolve-dispute.js'
+
+const handlers: Record<string, any> = {
+  'create-checkout': createCheckout,
+  'mock-payment': mockPayment,
+  'connect-onboard': connectOnboard,
+  'connect-status': connectStatus,
+  'expert-decision': expertDecision,
+  'complete-session': completeSession,
+  'worker-confirm': workerConfirm,
+  'reschedule-response': rescheduleResponse,
+  'cancel-appointment': cancelAppointment,
+  'raise-dispute': raiseDispute,
+  'admin-disputes': adminDisputes,
+  'admin-resolve-dispute': adminResolveDispute,
 }
 
 export default async function handler(req: any, res: any) {
@@ -38,14 +51,11 @@ export default async function handler(req: any, res: any) {
     body = body || {}
 
     const name = body.__fn || req.query?.name
-    const loader = loaders[name]
-    if (!loader) {
+    const fn = handlers[name]
+    if (!fn) {
       res.status(404).json({ error: `Unknown function: ${name}` })
       return
     }
-
-    const mod = await loader()
-    const fn = mod.handler || mod.default
 
     const event = {
       httpMethod: req.method,
