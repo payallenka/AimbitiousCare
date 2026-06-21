@@ -20,13 +20,17 @@ export function sessionHasEnded(appt: {
 
 // Calls a Netlify Function with the current user's Supabase access token.
 // All payment/payout/dispute server logic lives in netlify/functions/*.
+// Serverless function base path. Defaults to Vercel's /api; override with
+// VITE_FUNCTIONS_BASE=/.netlify/functions for local `netlify dev`.
+const FUNCTIONS_BASE = import.meta.env.VITE_FUNCTIONS_BASE || '/api'
+
 async function callFunction<T = any>(name: string, body?: unknown): Promise<T> {
   const {
     data: { session },
   } = await supabase.auth.getSession()
   const token = session?.access_token
 
-  const res = await fetch(`/.netlify/functions/${name}`, {
+  const res = await fetch(`${FUNCTIONS_BASE}/${name}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
