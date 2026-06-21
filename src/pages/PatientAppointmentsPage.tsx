@@ -157,7 +157,7 @@ export default function PatientAppointmentsPage() {
   }
 
   const handleCancel = (id: string) =>
-    withBusy(id, () => cancelAppointmentApi(id), 'Appointment cancelled. Any eligible refund has been initiated.')
+    withBusy(id, () => cancelAppointmentApi(id), 'Appointment successfully cancelled')
 
   const handleConfirmSession = (id: string) =>
     withBusy(id, () => workerConfirm(id), 'Session confirmed — thank you!')

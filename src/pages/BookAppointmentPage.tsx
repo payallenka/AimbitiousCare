@@ -55,6 +55,7 @@ export default function BookAppointmentPage() {
   const [concerns, setConcerns] = useState('')
   const [goals, setGoals] = useState('')
   const [consent, setConsent] = useState(false)
+  const [bookedTimes, setBookedTimes] = useState<string[]>([])
 
   useEffect(() => {
     fetchExperts()
@@ -65,6 +66,27 @@ export default function BookAppointmentPage() {
       fetchAvailability(selectedExpert.id)
     }
   }, [selectedExpert])
+
+  // Hide times that are already booked for this expert on the chosen date.
+  useEffect(() => {
+    const fetchBookedTimes = async () => {
+      if (!selectedExpert || !selectedDate) {
+        setBookedTimes([])
+        return
+      }
+      const { data, error } = await supabase.rpc('get_booked_slots', {
+        p_professional_id: selectedExpert.id,
+        p_date: selectedDate,
+      })
+      if (error) {
+        console.error('Error fetching booked slots:', error)
+        setBookedTimes([])
+        return
+      }
+      setBookedTimes((data || []).map((r: any) => String(r.slot_time).slice(0, 5)))
+    }
+    fetchBookedTimes()
+  }, [selectedExpert, selectedDate])
 
   const fetchExperts = async () => {
     try {
@@ -161,7 +183,8 @@ export default function BookAppointmentPage() {
       }
     })
     
-    return [...new Set(times)].sort()
+    // Exclude slots already booked for this expert on this date.
+    return [...new Set(times)].sort().filter((t) => !bookedTimes.includes(t))
   }
 
   const handlePayAndBook = async () => {

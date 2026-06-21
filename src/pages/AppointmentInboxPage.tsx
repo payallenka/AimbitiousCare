@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import Sidebar from '@/components/Sidebar'
 import { InfoDialogButton } from '@/components/InfoDialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import {
   expertDecision,
   completeSession,
@@ -193,7 +194,7 @@ export default function AppointmentInboxPage() {
         decision: 'reject',
         response: professionalResponse || undefined,
       })
-      toast.success('Appointment declined', { description: 'A full refund has been initiated for the patient.' })
+      toast.success('Appointment successfully cancelled')
       resetForms()
       fetchAppointments()
     } catch (e: any) {
@@ -349,8 +350,8 @@ export default function AppointmentInboxPage() {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
+        <div>
+          <div className="space-y-4">
             {filteredAppointments.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -431,14 +432,11 @@ export default function AppointmentInboxPage() {
             )}
           </div>
 
-          <div className="lg:col-span-1">
-            {selectedAppointment ? (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="relative overflow-hidden rounded-3xl border border-black/10 bg-white/60 backdrop-blur-xl p-6 space-y-6"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-black/10 opacity-0 group-hover:opacity-100 transition pointer-events-none" />
+          <Dialog open={!!selectedAppointment} onOpenChange={(open) => { if (!open) resetForms() }}>
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+              {selectedAppointment && (
+              <div className="space-y-6">
+                <DialogTitle className="sr-only">Appointment Details</DialogTitle>
                 <div className="relative">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-black">Appointment Details</h3>
@@ -660,21 +658,10 @@ export default function AppointmentInboxPage() {
                     </p>
                   </div>
                 )}
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="rounded-3xl border border-black/10 bg-white/60 backdrop-blur-xl p-10 text-center"
-              >
-                <p className="text-xs uppercase tracking-[0.3em] text-black/40 mb-3">Details</p>
-                <h3 className="text-lg font-semibold mb-2 text-black">Select an appointment</h3>
-                <p className="text-sm text-black/60">
-                  Click on an appointment request to view details and respond
-                </p>
-              </motion.div>
-            )}
-          </div>
+              </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

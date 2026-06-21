@@ -154,7 +154,7 @@ export function formatPence(pence?: number | null): string {
 
 export const PAYMENT_STATUS_LABELS: Record<string, string> = {
   unpaid: 'Unpaid',
-  paid_held: 'Paid · Held',
+  paid_held: 'Paid / Held',
   ready_for_release: 'Ready for release',
   released: 'Paid out',
   refund_initiated: 'Refund initiated',

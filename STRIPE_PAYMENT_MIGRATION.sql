@@ -239,6 +239,29 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER set_appointment_request_expiry BEFORE INSERT ON appointment_requests
   FOR EACH ROW EXECUTE FUNCTION set_request_expiry();
 
+-- -----------------------------------------------------
+-- 9. BOOKED SLOTS (for hiding taken times when booking)
+-- -----------------------------------------------------
+-- SECURITY DEFINER so a patient can see WHICH times are taken for an expert on
+-- a date, without exposing other patients' appointment rows (RLS-protected).
+CREATE OR REPLACE FUNCTION get_booked_slots(p_professional_id UUID, p_date DATE)
+RETURNS TABLE(slot_time TIME)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT COALESCE(confirmed_time, requested_time) AS slot_time
+  FROM appointment_requests
+  WHERE professional_id = p_professional_id
+    AND COALESCE(confirmed_date, requested_date) = p_date
+    AND status IN (
+      'pending', 'confirmed', 'awaiting_confirmation',
+      'reschedule_pending', 'disputed', 'under_investigation'
+    );
+$$;
+
+GRANT EXECUTE ON FUNCTION get_booked_slots(UUID, DATE) TO authenticated;
+
 -- =====================================================
 -- END MIGRATION
 -- =====================================================
