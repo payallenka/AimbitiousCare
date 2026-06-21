@@ -11,6 +11,12 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   console.error('❌ Supabase service-role env vars missing (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)')
 }
 
-export const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false },
-})
+// Use placeholders when env is missing so createClient doesn't THROW at module
+// load (which would crash the whole serverless function with
+// FUNCTION_INVOCATION_FAILED). If env is truly missing, calls fail at runtime
+// with a catchable error instead.
+export const supabaseAdmin = createClient(
+  SUPABASE_URL || 'https://placeholder.supabase.co',
+  SERVICE_ROLE_KEY || 'placeholder-key',
+  { auth: { autoRefreshToken: false, persistSession: false } },
+)
