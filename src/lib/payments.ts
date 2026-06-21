@@ -23,6 +23,9 @@ export function sessionHasEnded(appt: {
 // Serverless function base path. Defaults to Vercel's /api; override with
 // VITE_FUNCTIONS_BASE=/.netlify/functions for local `netlify dev`.
 const FUNCTIONS_BASE = import.meta.env.VITE_FUNCTIONS_BASE || '/api'
+// On Vercel (/api) every endpoint is dispatched through a single /api/fn
+// router (Hobby plan caps functions at 12). Local netlify dev uses per-file.
+const USE_ROUTER = FUNCTIONS_BASE === '/api'
 
 async function callFunction<T = any>(name: string, body?: unknown): Promise<T> {
   const {
@@ -30,13 +33,16 @@ async function callFunction<T = any>(name: string, body?: unknown): Promise<T> {
   } = await supabase.auth.getSession()
   const token = session?.access_token
 
-  const res = await fetch(`${FUNCTIONS_BASE}/${name}`, {
+  const url = USE_ROUTER ? `${FUNCTIONS_BASE}/fn` : `${FUNCTIONS_BASE}/${name}`
+  const payload = USE_ROUTER ? { ...(body as object), __fn: name } : body
+
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: USE_ROUTER ? JSON.stringify(payload) : body ? JSON.stringify(body) : undefined,
   })
 
   const json = await res.json().catch(() => ({}))
