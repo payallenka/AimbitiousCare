@@ -12,7 +12,7 @@ interface Body {
 // Worker's independent session confirmation. Either party can confirm in any
 // order; the session only completes + pays out once BOTH the expert (with
 // summary/notes/duration) and the worker have confirmed (the AND condition).
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST') return badRequest('Method not allowed')

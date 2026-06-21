@@ -14,7 +14,7 @@ interface Body {
 // raise it. The appointment moves to 'disputed' (standard) or
 // 'under_investigation' (safety) and payout is blocked until an admin
 // resolves the case (enforced in releasePayout's open-case check).
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST') return badRequest('Method not allowed')

@@ -14,7 +14,7 @@ interface Body {
 
 // Resolves a dispute/safety case. Authority override: can move money even when
 // the automatic-payout conditions are not all met. Admin-only.
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST') return badRequest('Method not allowed')

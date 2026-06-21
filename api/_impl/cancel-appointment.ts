@@ -12,7 +12,7 @@ interface Body {
 //   • > 24h before the session  → full refund
 //   • within 24h of the session → no refund (expert's time is reserved)
 // Adjust this rule to match the final platform policy.
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST') return badRequest('Method not allowed')

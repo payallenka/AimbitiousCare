@@ -18,7 +18,7 @@ const EXPERT_ROLES = [
 // Creates (or reuses) a Stripe Express connected account for the calling
 // expert and returns a hosted onboarding link. Stripe collects and stores
 // bank/identity/tax details — we only persist the account id.
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST') return badRequest('Method not allowed')

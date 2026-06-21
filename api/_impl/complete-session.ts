@@ -15,7 +15,7 @@ interface Body {
 // Expert marks a confirmed session complete and uploads the required summary,
 // notes and duration. Moves to 'awaiting_confirmation' and arms the 72h
 // auto-release timer (worker may confirm sooner, or dispute within the window).
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST') return badRequest('Method not allowed')

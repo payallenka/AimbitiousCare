@@ -18,7 +18,7 @@ interface Body {
 // Expert responds to a paid booking request: accept (confirm), reject (full
 // refund + cancel), or reschedule (propose a new slot; existing payment stays
 // valid). Only the appointment's professional may call this.
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST') return badRequest('Method not allowed')

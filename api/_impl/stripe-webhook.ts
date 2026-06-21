@@ -6,7 +6,7 @@ import { notify } from './_shared/notify.js'
 // Stripe webhook — the SINGLE source of truth for payment state. The client
 // success redirect is never trusted; a booking only becomes "paid_held" here,
 // after signature verification.
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' }
   }

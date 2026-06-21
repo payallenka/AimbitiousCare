@@ -12,7 +12,7 @@ interface Body {
 // Test-only endpoint that stands in for Stripe Checkout + the webhook. On
 // 'success' it marks the booking paid_held (exactly like the webhook would);
 // on 'fail' it cancels the draft. Only active while MOCK_PAYMENTS is on.
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST') return badRequest('Method not allowed')

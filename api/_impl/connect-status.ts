@@ -6,7 +6,7 @@ import { ok, badRequest, serverError, preflight } from './_shared/http.js'
 // Retrieves the live Stripe account state for the calling expert and syncs
 // charges_enabled / payouts_enabled / onboarding_completed into the DB.
 // Called after the expert returns from Stripe's hosted onboarding.
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST' && event.httpMethod !== 'GET') {

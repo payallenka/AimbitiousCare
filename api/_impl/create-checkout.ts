@@ -22,7 +22,7 @@ interface CheckoutBody {
 // no transfer_data is set, so nothing reaches the expert until conditions are
 // met. The appointment row is created BEFORE payment so a successful charge
 // can never be orphaned.
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST') return badRequest('Method not allowed')

@@ -5,7 +5,7 @@ import { ok, badRequest, serverError, preflight } from './_shared/http.js'
 // Returns all disputes/safety cases with appointment + participant context for
 // the admin dashboard. Service-role read bypasses RLS; gated to admins
 // (role=admin or the SUPER_ADMIN_EMAILS allowlist).
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
 

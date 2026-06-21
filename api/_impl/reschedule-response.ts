@@ -11,7 +11,7 @@ interface Body {
 
 // Worker responds to an expert's reschedule proposal. Accept applies the new
 // slot (existing payment stays valid); reject cancels with a full refund.
-export const handler: any = async (event) => {
+export const handler: any = async (event: any) => {
   const pre = preflight(event)
   if (pre) return pre
   if (event.httpMethod !== 'POST') return badRequest('Method not allowed')
