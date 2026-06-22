@@ -29,20 +29,6 @@ export default function RegisterPage({ isSetup = false }: { isSetup?: boolean })
       gradient: 'from-black via-gray-800 to-black',
     },
   {
-    id: 'therapist',
-    title: 'Therapist',
-    description: 'Provide mental health support to those who need it',
-    services: [
-      'Help with anxiety & depression',
-      'Trauma & PTSD support',
-      'Cognitive behavioral therapy',
-      'Stress management',
-      'Life transition guidance',
-    ],
-    route: isSetup ? '/setup/professional/therapist' : '/register/professional/therapist',
-    gradient: 'from-pink-500 via-rose-600 to-pink-700',
-  },
-  {
     id: 'relationship_expert',
     title: 'Relationship Expert',
     description: 'Help with relationship issues and family dynamics',
