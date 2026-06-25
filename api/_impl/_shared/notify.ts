@@ -1,4 +1,5 @@
 import { supabaseAdmin } from './supabaseAdmin.js'
+import { sendNotificationEmail } from './email.js'
 
 export interface NotifyInput {
   userId: string
@@ -24,6 +25,13 @@ export async function notify(input: NotifyInput): Promise<void> {
   } catch (e) {
     console.error('notify() failed:', e)
   }
+  // Also send an email (best-effort; no-op if SendGrid isn't configured).
+  await sendNotificationEmail({
+    userId: input.userId,
+    title: input.title,
+    body: input.body,
+    link: input.link,
+  })
 }
 
 // Notify every admin. Admins are resolved by role; the SUPER_ADMIN_EMAILS
