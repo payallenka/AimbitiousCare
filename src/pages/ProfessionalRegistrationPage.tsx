@@ -71,7 +71,7 @@ const COMMON_LANGUAGES = [
 ]
 
 const ROLE_TITLES: Record<string, string> = {
-  therapist: 'Therapist',
+  therapist: 'Expert',
   relationship_expert: 'Relationship Expert',
   financial_expert: 'Financial Expert',
   dating_coach: 'Dating Coach',

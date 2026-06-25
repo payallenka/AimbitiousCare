@@ -248,7 +248,7 @@ export default function ChatPage() {
             )}
             <InfoDialogButton
               title="Conversation Tips"
-              description="Stay connected with patients or experts in real time."
+              description="Stay connected with users or experts in real time."
               points={[
                 'Messages appear instantly with optimistic updates.',
                 'Use the input below to send text—press Enter to submit quickly.',

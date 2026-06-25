@@ -192,7 +192,7 @@ export default function Sidebar() {
             </div>
             <div className="flex-1 overflow-hidden text-left">
               <div className="truncate font-bold text-foreground">{userProfile?.full_name || 'User'}</div>
-              <div className="truncate text-xs text-muted-foreground">{userProfile?.user_role}</div>
+              <div className="truncate text-xs text-muted-foreground capitalize">{userProfile?.user_role === 'patient' ? 'User' : userProfile?.user_role?.replace(/_/g, ' ')}</div>
             </div>
           </button>
 

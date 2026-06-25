@@ -21,7 +21,7 @@ export default function DashboardPage() {
     { title: 'My Profile', subtitle: 'Account Hub', desc: 'Control your personal information and preferences.', path: '/profile' },
     { title: 'Book Appointment', subtitle: 'Schedule', desc: 'Choose a time that fits you best in minutes.', path: '/book-appointment' },
     { title: 'My Appointments', subtitle: 'Upcoming', desc: 'Track upcoming and past sessions effortlessly.', path: '/my-appointments' },
-    { title: 'Rapid Alert', subtitle: 'Urgent Help', desc: 'Reach therapists instantly with rapid alerts.', path: '/rapid-alert' },
+    { title: 'Rapid Alert', subtitle: 'Urgent Help', desc: 'Reach experts instantly with rapid alerts.', path: '/rapid-alert' },
     { title: 'Community Posts', subtitle: 'Insights', desc: 'Learn from professional knowledge and updates.', path: '/posts' },
     { title: 'Exclusive Deals', subtitle: 'Benefits', desc: 'Unlock curated perks tailored for wellness.', path: '/deals' },
   ]
@@ -34,7 +34,7 @@ export default function DashboardPage() {
     { title: 'Set Availability', subtitle: 'Schedule', desc: 'Craft a calendar that adapts to your routine.', path: '/availability' },
     { title: 'Appointment Inbox', subtitle: 'Requests', desc: 'Review, confirm, or reschedule in one view.', path: '/appointment-inbox' },
     ...(userProfile?.user_role === 'therapist'
-      ? [{ title: 'Rapid Alert Inbox', subtitle: 'Urgent', desc: 'Respond quickly to patient critical moments.', path: '/rapid-alert-inbox' }]
+      ? [{ title: 'Rapid Alert Inbox', subtitle: 'Urgent', desc: 'Respond quickly to user critical moments.', path: '/rapid-alert-inbox' }]
       : []),
     { title: 'Community Posts', subtitle: 'Share', desc: 'Publish articles that amplify your voice.', path: '/posts' },
     { title: 'Exclusive Deals', subtitle: 'Perks', desc: 'Access premium offers curated for professionals.', path: '/deals' },

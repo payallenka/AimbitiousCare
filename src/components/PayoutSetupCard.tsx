@@ -72,7 +72,7 @@ export default function PayoutSetupCard() {
             <p className="text-sm text-black/60 mt-1 max-w-md">
               {ready
                 ? 'You can receive payouts. Funds are released automatically after each completed session.'
-                : 'Patients can only book you once your Stripe payout account is active. Stripe securely handles your bank and identity details — we never store them.'}
+                : 'Users can only book you once your Stripe payout account is active. Stripe securely handles your bank and identity details — we never store them.'}
             </p>
             {partiallyDone && (status?.requirements_due?.length ?? 0) > 0 && (
               <p className="flex items-center gap-1.5 text-xs text-amber-600 mt-2">

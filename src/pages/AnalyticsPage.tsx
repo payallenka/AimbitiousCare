@@ -240,7 +240,7 @@ export default function AnalyticsPage() {
             points={[
               'Review headline metrics in the stat cards along the top.',
               'Use charts to spot booking, post, and engagement trends by month.',
-              'Company users see employee-focused analytics; professionals see patient metrics.',
+              'Company users see employee-focused analytics; professionals see user metrics.',
             ]}
           />
         </div>
@@ -280,7 +280,7 @@ export default function AnalyticsPage() {
             className="stat-card"
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="metric-label">{userProfile?.user_role === 'company' ? 'Employees' : 'Patients'}</span>
+              <span className="metric-label">{userProfile?.user_role === 'company' ? 'Employees' : 'Users'}</span>
             </div>
             <p className="metric text-black">{analytics.totalPatients}</p>
             <p className="text-sm text-muted-foreground mt-1">Unique {userProfile?.user_role === 'company' ? 'team members' : 'clients'}</p>
@@ -427,7 +427,7 @@ export default function AnalyticsPage() {
                   data={[
                     { name: 'Posts', value: analytics.totalPosts },
                     { name: 'Likes', value: analytics.totalLikes },
-                    { name: 'Patients', value: analytics.totalPatients },
+                    { name: 'Users', value: analytics.totalPatients },
                   ]}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />

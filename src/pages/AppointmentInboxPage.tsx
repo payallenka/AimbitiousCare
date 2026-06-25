@@ -125,7 +125,7 @@ export default function AppointmentInboxPage() {
         return {
           ...request,
           patient: patient || {
-            full_name: 'Unknown Patient',
+            full_name: 'Unknown User',
             email: '',
             phone_number: '',
             profile_picture_url: null
@@ -323,7 +323,7 @@ export default function AppointmentInboxPage() {
               Appointment Inbox
             </h1>
             <p className="text-muted-foreground">
-              Review and respond to patient appointment requests
+              Review and respond to user appointment requests
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -339,10 +339,10 @@ export default function AppointmentInboxPage() {
             ))}
             <InfoDialogButton
               title="Appointment Inbox"
-              description="Monitor and respond to booking requests from patients."
+              description="Monitor and respond to booking requests from users."
               points={[
                 'Use the filters to focus on pending or confirmed requests.',
-                'Selecting a card shows complete patient details and notes.',
+                'Selecting a card shows complete user details and notes.',
                 'Confirm or decline bookings with prepared response fields.',
               ]}
               triggerClassName="hidden xl:inline-flex"
@@ -365,7 +365,7 @@ export default function AppointmentInboxPage() {
                 <p className="text-black/60">
                   {filter === 'pending'
                     ? "You're all caught up! No pending requests right now."
-                    : "When patients request appointments, they'll appear here."}
+                    : "When users request appointments, they'll appear here."}
                 </p>
               </motion.div>
             ) : (
@@ -397,7 +397,7 @@ export default function AppointmentInboxPage() {
                         )}
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.3em] text-black/40">Patient</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-black/40">User</p>
                         <h3 className="font-semibold text-lg text-black">{appointment.patient.full_name}</h3>
                         <p className="text-sm text-black/60 flex items-center gap-2">
                           <Mail className="w-3 h-3" />
@@ -472,7 +472,7 @@ export default function AppointmentInboxPage() {
 
                   {selectedAppointment.patient_message && (
                     <div className="mt-6">
-                      <h4 className="text-xs uppercase tracking-[0.3em] text-black/40 mb-2">Patient Message</h4>
+                      <h4 className="text-xs uppercase tracking-[0.3em] text-black/40 mb-2">User Message</h4>
                       <p className="rounded-2xl border border-black/10 bg-white/70 p-4 text-sm text-black/70 leading-relaxed">
                         {selectedAppointment.patient_message}
                       </p>
@@ -530,7 +530,7 @@ export default function AppointmentInboxPage() {
                       </div>
                     )}
                     <div>
-                      <Label htmlFor="response">Message to Patient (optional)</Label>
+                      <Label htmlFor="response">Message to User (optional)</Label>
                       <Textarea
                         id="response"
                         value={professionalResponse}

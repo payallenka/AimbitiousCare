@@ -113,8 +113,8 @@ export default function RapidAlertPage() {
 
       if (error) throw error
 
-      toast.success('Rapid alert sent to all therapists!', {
-        description: 'A therapist will review your alert shortly.',
+      toast.success('Rapid alert sent to all experts!', {
+        description: 'An expert will review your alert shortly.',
       })
 
       setMessage('')
@@ -169,10 +169,10 @@ export default function RapidAlertPage() {
           </div>
           <InfoDialogButton
             title="When to use Rapid Alert"
-            description="Trigger direct notifications to therapists in moments of critical need."
+            description="Trigger direct notifications to experts in moments of critical need."
             points={[
               'You get two rapid alerts each month—save them for serious, time-sensitive situations.',
-              'Describe how you are feeling so therapists can respond appropriately.',
+              'Describe how you are feeling so experts can respond appropriately.',
               'Watch the tracker to see how many alerts you have left this month.',
             ]}
           />

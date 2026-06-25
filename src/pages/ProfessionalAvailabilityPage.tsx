@@ -109,7 +109,7 @@ export default function ProfessionalAvailabilityPage() {
 
       if (error) throw error
 
-      toast.success('✅ Availability saved successfully!')
+      toast.success('Availability saved successfully!')
       fetchAvailability()
     } catch (error: any) {
       console.error('Error saving availability:', error)
@@ -199,11 +199,11 @@ export default function ProfessionalAvailabilityPage() {
                 </Button>
                 <InfoDialogButton
                   title="Availability Manager"
-                  description="Configure the exact times patients can book with you."
+                  description="Configure the exact times users can book with you."
                   points={[
                     'Create multiple time windows per day to map your schedule.',
                     'Use the Add Time Slot button to extend availability for any day.',
-                    'Publish changes once you are happy so patients see the latest calendar.',
+                    'Publish changes once you are happy so users see the latest calendar.',
                   ]}
                   triggerClassName="hidden lg:inline-flex"
                 />

@@ -185,7 +185,7 @@ export default function AIChatbotPage() {
               AI Mental Health Support
             </h1>
             <p className="text-gray-800 max-w-xl mx-auto font-semibold">
-              Your personal AI therapist, available 24/7. Confidential, understanding, and
+              Your personal AI companion, available 24/7. Confidential, understanding, and
               here to help construction workers navigate mental health challenges.
             </p>
             {messages.length > 0 && (

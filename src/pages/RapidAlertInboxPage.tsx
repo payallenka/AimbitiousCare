@@ -215,7 +215,7 @@ export default function RapidAlertInboxPage() {
             </Button>
             <InfoDialogButton
               title="Rapid Alert Guide"
-              description="Handle urgent requests from patients quickly and consistently."
+              description="Handle urgent requests from users quickly and consistently."
               points={[
                 'Switch tabs to track new, viewed, or cleared incidents.',
                 'Select an alert to read the full message and contact info.',
@@ -355,7 +355,7 @@ export default function RapidAlertInboxPage() {
                   </div>
 
                   <div className="relative border-t border-black/10 pt-5">
-                    <h4 className="text-xs uppercase tracking-[0.3em] text-black/40 mb-2">Patient</h4>
+                    <h4 className="text-xs uppercase tracking-[0.3em] text-black/40 mb-2">User</h4>
                     <div className="space-y-2 text-sm text-black/70">
                       <p>{selectedAlert.patient.full_name}</p>
                       <p>{selectedAlert.patient.email}</p>

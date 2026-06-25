@@ -100,7 +100,7 @@ export default function LoginPage() {
               className="space-y-6"
             >
               {[
-                { title: 'Professional Support', desc: 'Connect with licensed therapists' },
+                { title: 'Professional Support', desc: 'Connect with licensed experts' },
                 { title: '24/7 AI Assistance', desc: 'Always available when you need help' },
                 { title: 'Complete Privacy', desc: 'Your conversations are confidential' },
               ].map((feature, i) => (

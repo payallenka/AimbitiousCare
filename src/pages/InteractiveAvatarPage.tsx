@@ -37,7 +37,7 @@ export default function InteractiveAvatarPage() {
           </div>
           <InfoDialogButton
             title="About Amina"
-            description="Amina can walk patients through appointments, deals, and key features."
+            description="Amina can walk users through appointments, deals, and key features."
             points={[
               'Use the controls beside the avatar to start or pause the experience.',
               'Amina can respond to scripted prompts that you configure within Haygen.',
