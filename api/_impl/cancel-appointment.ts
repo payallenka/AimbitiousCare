@@ -58,6 +58,18 @@ export const handler: any = async (event: any) => {
       body: 'A worker cancelled their appointment.',
       appointmentId: appt.id,
     })
+    // Confirm to the user what happened to their money, since the refund rule
+    // depends on how close to the session they cancelled.
+    await notify({
+      userId: appt.patient_id,
+      type: 'appointment_cancelled_confirmation',
+      title: 'Appointment cancelled',
+      body: fullRefund
+        ? 'Your appointment was cancelled and a full refund has been initiated.'
+        : 'Your appointment was cancelled. As it was within 24 hours of the session, no refund applies.',
+      appointmentId: appt.id,
+      link: '/my-appointments',
+    })
     await notifyAdmins({
       type: 'admin_booking_cancelled',
       title: 'Booking cancelled by user',

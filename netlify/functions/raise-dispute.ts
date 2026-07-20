@@ -72,6 +72,19 @@ export const handler: Handler = async (event) => {
       body: `${category === 'safety' ? 'SAFETY: ' : ''}${body.reason}`,
       appointmentId: appt.id,
     })
+    // The person who raised it also needs written confirmation it was logged,
+    // and that their payment is frozen while it is reviewed.
+    await notify({
+      userId: caller.userId,
+      type: category === 'safety' ? 'safety_concern_submitted' : 'dispute_submitted',
+      title: category === 'safety' ? 'Safety concern submitted' : 'Dispute submitted',
+      body:
+        category === 'safety'
+          ? 'We have received your safety report and our team is investigating. The payment is frozen until it is resolved.'
+          : 'We have received your dispute and our team is reviewing it. The payment is on hold until it is resolved.',
+      appointmentId: appt.id,
+      link: isPatient ? '/my-appointments' : '/appointment-inbox',
+    })
 
     return ok({ status: category === 'safety' ? 'under_investigation' : 'disputed' })
   } catch (err: any) {

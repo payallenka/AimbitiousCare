@@ -78,6 +78,16 @@ export const handler: any = async (event: any) => {
         .update({ ...sessionFields, status: 'completed' })
         .eq('id', appt.id)
       const result = await releasePayout(appt.id)
+      // The user confirmed earlier and took no action here, so close the loop
+      // for them: the session is done and the payment has been settled.
+      await notify({
+        userId: appt.patient_id,
+        type: 'session_completed',
+        title: 'Session completed',
+        body: 'Your expert completed the session. Both sides have confirmed and the payment has been settled.',
+        appointmentId: appt.id,
+        link: '/my-appointments',
+      })
       await notifyAdmins({
         type: 'admin_session_completed',
         title: 'Session completed',
