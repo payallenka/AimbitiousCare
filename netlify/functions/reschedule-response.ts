@@ -62,6 +62,15 @@ export const handler: Handler = async (event) => {
       .update({ status: 'cancelled' })
       .eq('id', appt.id)
     const refund = await refundAppointment(appt.id, { reason: 'reschedule_rejected' })
+    // The expert proposed the new slot, so they need to hear it was turned down.
+    await notify({
+      userId: appt.professional_id,
+      type: 'reschedule_rejected',
+      title: 'Reschedule declined',
+      body: 'The user declined your proposed time. The booking was cancelled and refunded.',
+      appointmentId: appt.id,
+      link: '/appointment-inbox',
+    })
     return ok({ status: 'cancelled', refund })
   } catch (err: any) {
     console.error('reschedule-response error:', err)

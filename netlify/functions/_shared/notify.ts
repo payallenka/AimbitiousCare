@@ -55,6 +55,16 @@ export async function notifyAdmins(input: Omit<NotifyInput, 'userId'>): Promise<
       for (const a of emailAdmins || []) recipientIds.add(a.id)
     }
 
+    // Silently dropping admin alerts (disputes, safety, failed payouts) is far
+    // worse than the alert itself being noisy, so make the misconfiguration loud.
+    if (recipientIds.size === 0) {
+      console.warn(
+        `[notifyAdmins] DROPPED "${input.type}" — no admin recipients. ` +
+          'Set a user to user_role=admin, or point SUPER_ADMIN_EMAILS at an existing account.',
+      )
+      return
+    }
+
     for (const id of recipientIds) {
       await notify({ ...input, userId: id })
     }
