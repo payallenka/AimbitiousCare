@@ -1,7 +1,7 @@
 import { MOCK_PAYMENTS } from './_shared/stripe.js'
 import { supabaseAdmin } from './_shared/supabaseAdmin.js'
 import { getCallingUser } from './_shared/domain.js'
-import { notify } from './_shared/notify.js'
+import { notify, notifyAdmins } from './_shared/notify.js'
 import { ok, badRequest, serverError, preflight } from './_shared/http.js'
 
 interface Body {
@@ -68,6 +68,13 @@ export const handler: any = async (event: any) => {
       body: 'You have received a new paid appointment request awaiting your approval.',
       appointmentId: appt.id,
       link: '/appointment-inbox',
+    })
+    await notifyAdmins({
+      type: 'admin_booking_paid',
+      title: 'New paid booking',
+      body: 'A user paid for a session. Funds are held until the expert responds.',
+      appointmentId: appt.id,
+      link: '/admin',
     })
 
     return ok({ outcome: 'success', status: 'paid_held' })

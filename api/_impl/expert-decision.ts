@@ -1,7 +1,7 @@
 import { supabaseAdmin } from './_shared/supabaseAdmin.js'
 import { getCallingUser } from './_shared/domain.js'
 import { refundAppointment } from './_shared/payout.js'
-import { notify } from './_shared/notify.js'
+import { notify, notifyAdmins } from './_shared/notify.js'
 import { ok, badRequest, serverError, preflight } from './_shared/http.js'
 
 interface Body {
@@ -71,6 +71,13 @@ export const handler: any = async (event: any) => {
         appointmentId: appt.id,
         link: '/my-appointments',
       })
+      await notifyAdmins({
+        type: 'admin_booking_accepted',
+        title: 'Booking accepted',
+        body: 'An expert accepted a booking. Funds stay held until the session is confirmed.',
+        appointmentId: appt.id,
+        link: '/admin',
+      })
       return ok({ status: 'confirmed' })
     }
 
@@ -93,6 +100,15 @@ export const handler: any = async (event: any) => {
           : 'Your appointment request was declined. No payment was taken.',
         appointmentId: appt.id,
         link: '/my-appointments',
+      })
+      await notifyAdmins({
+        type: 'admin_booking_declined',
+        title: 'Booking declined',
+        body: refund
+          ? 'An expert declined a paid booking. A refund has been initiated.'
+          : 'An expert cleared an unpaid booking request. No payment was taken.',
+        appointmentId: appt.id,
+        link: '/admin',
       })
       return ok({ status: 'cancelled', refund })
     }

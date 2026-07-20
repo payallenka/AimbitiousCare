@@ -95,6 +95,13 @@ export async function releasePayout(appointmentId: string): Promise<PayoutResult
       body: `£${(appt.expert_payout_pence / 100).toFixed(2)} is on its way to your bank account.`,
       appointmentId,
     })
+    await notifyAdmins({
+      type: 'admin_payout_released',
+      title: 'Payout released',
+      body: `£${(appt.expert_payout_pence / 100).toFixed(2)} was released to an expert (simulated).`,
+      appointmentId,
+      link: '/admin',
+    })
     return { released: true, transferId: `mock_tr_${appointmentId}` }
   }
 
@@ -137,6 +144,13 @@ export async function releasePayout(appointmentId: string): Promise<PayoutResult
       title: 'Payout released',
       body: `£${(appt.expert_payout_pence / 100).toFixed(2)} is on its way to your bank account.`,
       appointmentId,
+    })
+    await notifyAdmins({
+      type: 'admin_payout_released',
+      title: 'Payout released',
+      body: `£${(appt.expert_payout_pence / 100).toFixed(2)} was transferred to an expert.`,
+      appointmentId,
+      link: '/admin',
     })
     return { released: true, transferId: transfer.id }
   } catch (err: any) {
@@ -196,6 +210,13 @@ export async function refundAppointment(
       body: `A refund of £${((opts.amountPence ?? appt.amount_pence) / 100).toFixed(2)} has been processed.`,
       appointmentId,
     })
+    await notifyAdmins({
+      type: 'admin_refund',
+      title: 'Refund processed',
+      body: `£${((opts.amountPence ?? appt.amount_pence) / 100).toFixed(2)} was refunded to a user (simulated).`,
+      appointmentId,
+      link: '/admin',
+    })
     return { ok: true, refundId: `mock_re_${appointmentId}` }
   }
 
@@ -220,6 +241,13 @@ export async function refundAppointment(
       title: 'Refund initiated',
       body: `A refund of £${((opts.amountPence ?? appt.amount_pence) / 100).toFixed(2)} has been initiated and will appear on your statement shortly.`,
       appointmentId,
+    })
+    await notifyAdmins({
+      type: 'admin_refund',
+      title: 'Refund initiated',
+      body: `£${((opts.amountPence ?? appt.amount_pence) / 100).toFixed(2)} is being refunded to a user.`,
+      appointmentId,
+      link: '/admin',
     })
     return { ok: true, refundId: refund.id }
   } catch (err: any) {

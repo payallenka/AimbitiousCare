@@ -3,7 +3,7 @@ import { MOCK_PAYMENTS } from './_shared/stripe'
 import { supabaseAdmin } from './_shared/supabaseAdmin'
 import { getCallingUser } from './_shared/domain'
 import { releasePayout } from './_shared/payout'
-import { notify } from './_shared/notify'
+import { notify, notifyAdmins } from './_shared/notify'
 import { ok, badRequest, serverError, preflight } from './_shared/http'
 
 interface Body {
@@ -79,6 +79,13 @@ export const handler: Handler = async (event) => {
         .update({ ...sessionFields, status: 'completed' })
         .eq('id', appt.id)
       const result = await releasePayout(appt.id)
+      await notifyAdmins({
+        type: 'admin_session_completed',
+        title: 'Session completed',
+        body: 'Both sides confirmed a session. Payout release was attempted.',
+        appointmentId: appt.id,
+        link: '/admin',
+      })
       return ok({ status: 'completed', bothConfirmed: true, payout: result })
     }
 

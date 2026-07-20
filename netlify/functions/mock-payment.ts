@@ -2,7 +2,7 @@ import { Handler } from '@netlify/functions'
 import { MOCK_PAYMENTS } from './_shared/stripe'
 import { supabaseAdmin } from './_shared/supabaseAdmin'
 import { getCallingUser } from './_shared/domain'
-import { notify } from './_shared/notify'
+import { notify, notifyAdmins } from './_shared/notify'
 import { ok, badRequest, serverError, preflight } from './_shared/http'
 
 interface Body {
@@ -69,6 +69,13 @@ export const handler: Handler = async (event) => {
       body: 'You have received a new paid appointment request awaiting your approval.',
       appointmentId: appt.id,
       link: '/appointment-inbox',
+    })
+    await notifyAdmins({
+      type: 'admin_booking_paid',
+      title: 'New paid booking',
+      body: 'A user paid for a session. Funds are held until the expert responds.',
+      appointmentId: appt.id,
+      link: '/admin',
     })
 
     return ok({ outcome: 'success', status: 'paid_held' })

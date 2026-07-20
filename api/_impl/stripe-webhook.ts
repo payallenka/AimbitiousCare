@@ -1,7 +1,7 @@
 import Stripe from 'stripe'
 import { stripe, STRIPE_WEBHOOK_SECRET } from './_shared/stripe.js'
 import { supabaseAdmin } from './_shared/supabaseAdmin.js'
-import { notify } from './_shared/notify.js'
+import { notify, notifyAdmins } from './_shared/notify.js'
 
 // Stripe webhook — the SINGLE source of truth for payment state. The client
 // success redirect is never trusted; a booking only becomes "paid_held" here,
@@ -107,6 +107,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     body: 'You have received a new paid appointment request awaiting your approval.',
     appointmentId,
     link: '/appointment-inbox',
+  })
+  await notifyAdmins({
+    type: 'admin_booking_paid',
+    title: 'New paid booking',
+    body: 'A user paid for a session. Funds are held until the expert responds.',
+    appointmentId,
+    link: '/admin',
   })
 }
 

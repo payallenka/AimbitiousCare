@@ -2,7 +2,7 @@ import { Handler } from '@netlify/functions'
 import { supabaseAdmin } from './_shared/supabaseAdmin'
 import { getCallingUser } from './_shared/domain'
 import { refundAppointment } from './_shared/payout'
-import { notify } from './_shared/notify'
+import { notify, notifyAdmins } from './_shared/notify'
 import { ok, badRequest, serverError, preflight } from './_shared/http'
 
 interface Body {
@@ -58,6 +58,15 @@ export const handler: Handler = async (event) => {
       title: 'Appointment cancelled',
       body: 'A worker cancelled their appointment.',
       appointmentId: appt.id,
+    })
+    await notifyAdmins({
+      type: 'admin_booking_cancelled',
+      title: 'Booking cancelled by user',
+      body: fullRefund
+        ? 'A user cancelled their appointment. A full refund was issued.'
+        : 'A user cancelled within 24h of the session — no refund was issued.',
+      appointmentId: appt.id,
+      link: '/admin',
     })
 
     return ok({ status: 'cancelled', fullRefund, refund })

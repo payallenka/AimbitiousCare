@@ -2,7 +2,7 @@ import { Handler } from '@netlify/functions'
 import { supabaseAdmin } from './_shared/supabaseAdmin'
 import { getCallingUser } from './_shared/domain'
 import { refundAppointment } from './_shared/payout'
-import { notify } from './_shared/notify'
+import { notify, notifyAdmins } from './_shared/notify'
 import { ok, badRequest, serverError, preflight } from './_shared/http'
 
 interface Body {
@@ -72,6 +72,13 @@ export const handler: Handler = async (event) => {
         appointmentId: appt.id,
         link: '/my-appointments',
       })
+      await notifyAdmins({
+        type: 'admin_booking_accepted',
+        title: 'Booking accepted',
+        body: 'An expert accepted a booking. Funds stay held until the session is confirmed.',
+        appointmentId: appt.id,
+        link: '/admin',
+      })
       return ok({ status: 'confirmed' })
     }
 
@@ -94,6 +101,15 @@ export const handler: Handler = async (event) => {
           : 'Your appointment request was declined. No payment was taken.',
         appointmentId: appt.id,
         link: '/my-appointments',
+      })
+      await notifyAdmins({
+        type: 'admin_booking_declined',
+        title: 'Booking declined',
+        body: refund
+          ? 'An expert declined a paid booking. A refund has been initiated.'
+          : 'An expert cleared an unpaid booking request. No payment was taken.',
+        appointmentId: appt.id,
+        link: '/admin',
       })
       return ok({ status: 'cancelled', refund })
     }
