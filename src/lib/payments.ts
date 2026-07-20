@@ -163,6 +163,54 @@ export const PAYMENT_STATUS_LABELS: Record<string, string> = {
   payout_failed: 'Payout failed',
 }
 
+// Where the money physically sits right now, in plain language. Both the expert
+// and the user read the same story: Pending → Held → Released (or Refunded /
+// Rejected when the booking never goes ahead).
+export type PayoutTone = 'pending' | 'held' | 'released' | 'refunded' | 'failed' | 'rejected'
+
+export function getPayoutStatus(
+  paymentStatus?: string,
+  appointmentStatus?: string,
+): { label: string; tone: PayoutTone; hint: string } {
+  // A booking that was declined/cancelled before payment never holds money.
+  if (
+    appointmentStatus &&
+    ['cancelled', 'rejected'].includes(appointmentStatus) &&
+    (!paymentStatus || paymentStatus === 'unpaid')
+  ) {
+    return { label: 'Rejected', tone: 'rejected', hint: 'This request was declined — no funds were taken.' }
+  }
+
+  switch (paymentStatus) {
+    case 'paid_held':
+      return { label: 'Held', tone: 'held', hint: 'Paid and held securely by the platform until the session is confirmed.' }
+    case 'ready_for_release':
+      return { label: 'Releasing', tone: 'held', hint: 'Conditions met — the transfer to your account is being created.' }
+    case 'released':
+      return { label: 'Released', tone: 'released', hint: 'Sent to your Stripe account.' }
+    case 'refund_initiated':
+      return { label: 'Refunding', tone: 'refunded', hint: 'A refund to the user is being processed.' }
+    case 'refunded':
+      return { label: 'Refunded', tone: 'refunded', hint: 'Returned to the user — no payout is due.' }
+    case 'partially_refunded':
+      return { label: 'Partially refunded', tone: 'refunded', hint: 'Part was returned to the user; the rest was paid out.' }
+    case 'payout_failed':
+      return { label: 'Failed', tone: 'failed', hint: 'The transfer failed — check your Stripe payout details.' }
+    case 'unpaid':
+    default:
+      return { label: 'Pending', tone: 'pending', hint: 'Awaiting the user’s payment — nothing has been charged yet.' }
+  }
+}
+
+export const PAYOUT_TONE_CLASSES: Record<PayoutTone, string> = {
+  pending: 'bg-amber-100 text-amber-700 border-amber-200',
+  held: 'bg-blue-100 text-blue-700 border-blue-200',
+  released: 'bg-green-100 text-green-700 border-green-200',
+  refunded: 'bg-gray-100 text-gray-700 border-gray-200',
+  failed: 'bg-red-100 text-red-700 border-red-200',
+  rejected: 'bg-red-100 text-red-700 border-red-200',
+}
+
 export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
   pending: 'Pending approval',
   confirmed: 'Confirmed',

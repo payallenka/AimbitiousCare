@@ -17,7 +17,8 @@ import {
   formatPence,
   sessionHasEnded,
   IS_MOCK_PAYMENTS,
-  PAYMENT_STATUS_LABELS,
+  getPayoutStatus,
+  PAYOUT_TONE_CLASSES,
   APPOINTMENT_STATUS_LABELS,
 } from '@/lib/payments'
 
@@ -463,11 +464,22 @@ export default function AppointmentInboxPage() {
                     <div className="flex justify-between"><span>Time</span><span>{formatTime(selectedAppointment.requested_time)}</span></div>
                     <div className="flex justify-between"><span>Duration</span><span>{selectedAppointment.duration_minutes} minutes</span></div>
                     <div className="flex justify-between"><span>Session</span><span className="capitalize">{selectedAppointment.session_type || 'online'}{selectedAppointment.online_platform ? ` · ${selectedAppointment.online_platform === 'google_meet' ? 'Google Meet' : 'Zoom'}` : ''}</span></div>
-                    <div className="flex justify-between"><span>Fee paid</span><span>{formatPence(selectedAppointment.amount_pence)}</span></div>
+                    <div className="flex justify-between"><span>Session fee</span><span>{formatPence(selectedAppointment.amount_pence)}</span></div>
                     <div className="flex justify-between"><span>Your payout</span><span className="font-medium text-black">{formatPence(selectedAppointment.expert_payout_pence)}</span></div>
-                    {selectedAppointment.payment_status && (
-                      <div className="flex justify-between"><span>Payment</span><span className="font-medium text-black">{PAYMENT_STATUS_LABELS[selectedAppointment.payment_status] || selectedAppointment.payment_status}</span></div>
-                    )}
+                    {(() => {
+                      const payout = getPayoutStatus(selectedAppointment.payment_status, selectedAppointment.status)
+                      return (
+                        <div className="pt-3 mt-1 border-t border-black/10">
+                          <div className="flex justify-between items-center">
+                            <span>Expert payout</span>
+                            <span className={`rounded-full border px-3 py-0.5 text-xs font-semibold ${PAYOUT_TONE_CLASSES[payout.tone]}`}>
+                              {payout.label}
+                            </span>
+                          </div>
+                          <p className="mt-1.5 text-xs text-black/45 leading-relaxed">{payout.hint}</p>
+                        </div>
+                      )
+                    })()}
                   </div>
 
                   {selectedAppointment.patient_message && (
@@ -501,8 +513,21 @@ export default function AppointmentInboxPage() {
                 {/* PENDING (paid) → accept / decline / reschedule */}
                 {selectedAppointment.status === 'pending' && (
                   selectedAppointment.payment_status !== 'paid_held' ? (
-                    <div className="relative z-10 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
-                      Awaiting payment — this request becomes actionable once the patient's payment is confirmed.
+                    <div className="relative z-10 space-y-3">
+                      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
+                        <p className="font-semibold mb-1">Awaiting payment</p>
+                        <p className="leading-relaxed">
+                          This user started booking but hasn't completed payment, so <strong>nothing has been charged</strong> and your payout stays <strong>Pending</strong>. You can't accept or reschedule until the payment clears — but you can cancel the request to clear it from your inbox.
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={handleReject}
+                        disabled={actionLoading}
+                        className="w-full"
+                      >
+                        {actionLoading ? 'Cancelling…' : 'Cancel request'}
+                      </Button>
                     </div>
                   ) : (
                   <div className="relative z-10 space-y-4">

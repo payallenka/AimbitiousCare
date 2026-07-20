@@ -16,7 +16,8 @@ import {
   formatPence,
   sessionHasEnded,
   IS_MOCK_PAYMENTS,
-  PAYMENT_STATUS_LABELS,
+  getPayoutStatus,
+  PAYOUT_TONE_CLASSES,
 } from '@/lib/payments'
 
 const DEFAULT_AVATAR = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect width="64" height="64" fill="%23f5f5dc"/%3E%3Ccircle cx="32" cy="24" r="12" fill="%23000"/%3E%3Cpath fill="%23000" d="M16 54c0-8.8 7.2-16 16-16s16 7.2 16 16z"/%3E%3C/svg%3E'
@@ -479,14 +480,22 @@ export default function PatientAppointmentsPage() {
                   )}
 
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between pt-4 border-t border-black/10">
-                    <div className="text-xs text-black/50">
-                      Requested {new Date(appointment.created_at).toLocaleDateString('en-GB')}
-                      <span className="ml-4">
-                        Paid <strong>{formatPence(appointment.amount_pence) !== '—' ? formatPence(appointment.amount_pence) : (appointment.professional.professional_profiles?.appointment_fee ? `£${appointment.professional.professional_profiles.appointment_fee}` : '—')}</strong>
+                    <div className="text-xs text-black/50 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                      <span>Requested {new Date(appointment.created_at).toLocaleDateString('en-GB')}</span>
+                      <span>
+                        Fee <strong>{formatPence(appointment.amount_pence) !== '—' ? formatPence(appointment.amount_pence) : (appointment.professional.professional_profiles?.appointment_fee ? `£${appointment.professional.professional_profiles.appointment_fee}` : '—')}</strong>
                       </span>
-                      {appointment.payment_status && (
-                        <span className="ml-4">{PAYMENT_STATUS_LABELS[appointment.payment_status] || appointment.payment_status}</span>
-                      )}
+                      {(() => {
+                        const payout = getPayoutStatus(appointment.payment_status, appointment.status)
+                        return (
+                          <span className="inline-flex items-center gap-1.5">
+                            Payment
+                            <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${PAYOUT_TONE_CLASSES[payout.tone]}`}>
+                              {payout.label}
+                            </span>
+                          </span>
+                        )
+                      })()}
                     </div>
 
                     {(() => {

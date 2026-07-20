@@ -37,7 +37,12 @@ export const handler: any = async (event: any) => {
       .maybeSingle()
     if (!appt) return badRequest('Appointment not found')
     if (appt.professional_id !== caller.userId) return badRequest('Not your appointment')
-    if (appt.payment_status !== 'paid_held') {
+    // Accepting or rescheduling requires funds already secured. Declining is
+    // also allowed on a still-unpaid request so experts can clear abandoned
+    // checkouts out of their inbox (nothing was charged, so nothing to refund).
+    const decliningUnpaid =
+      body.decision === 'reject' && appt.payment_status === 'unpaid' && appt.status === 'pending'
+    if (appt.payment_status !== 'paid_held' && !decliningUnpaid) {
       return badRequest('Cannot act on an unpaid or already-settled appointment')
     }
 
@@ -74,12 +79,18 @@ export const handler: any = async (event: any) => {
         .from('appointment_requests')
         .update({ status: 'cancelled', professional_response: body.response || null })
         .eq('id', appt.id)
-      const refund = await refundAppointment(appt.id, { reason: 'expert_rejected' })
+      // Only a held payment can be refunded; an unpaid request has no charge.
+      const refund =
+        appt.payment_status === 'paid_held'
+          ? await refundAppointment(appt.id, { reason: 'expert_rejected' })
+          : null
       await notify({
         userId: appt.patient_id,
         type: 'appointment_rejected',
         title: 'Appointment declined',
-        body: 'Your appointment request was declined. A full refund has been initiated.',
+        body: refund
+          ? 'Your appointment request was declined. A full refund has been initiated.'
+          : 'Your appointment request was declined. No payment was taken.',
         appointmentId: appt.id,
         link: '/my-appointments',
       })
