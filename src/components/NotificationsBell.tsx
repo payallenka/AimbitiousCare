@@ -86,8 +86,11 @@ export default function NotificationsBell() {
         )}
       </button>
 
+      {/* The bell sits inside a 256px sidebar pinned to the left edge, so
+          anchoring the panel to its right pushes it off-screen. Open it
+          rightward on desktop; on the mobile drawer, span the viewport. */}
       {open && (
-        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-black/10 bg-white shadow-xl z-50">
+        <div className="fixed left-4 right-4 top-16 max-h-[70vh] overflow-y-auto rounded-2xl border border-black/10 bg-white shadow-xl z-[60] lg:absolute lg:left-0 lg:right-auto lg:top-full lg:mt-2 lg:w-96 lg:max-h-96">
           <div className="flex items-center justify-between px-4 py-3 border-b border-black/10">
             <span className="font-semibold text-sm">Notifications</span>
             {unread > 0 && (
@@ -109,9 +112,9 @@ export default function NotificationsBell() {
               >
                 <div className="flex items-start gap-2">
                   {!n.is_read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}
-                  <div className={n.is_read ? 'pl-4' : ''}>
-                    <p className="text-sm font-medium text-black">{n.title}</p>
-                    {n.body && <p className="text-xs text-black/60 mt-0.5">{n.body}</p>}
+                  <div className={`min-w-0 flex-1 ${n.is_read ? 'pl-4' : ''}`}>
+                    <p className="text-sm font-medium text-black break-words">{n.title}</p>
+                    {n.body && <p className="text-xs text-black/60 mt-0.5 break-words">{n.body}</p>}
                     <p className="text-[10px] text-black/40 mt-1">{new Date(n.created_at).toLocaleString('en-GB')}</p>
                   </div>
                 </div>
